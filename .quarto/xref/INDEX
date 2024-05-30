@@ -7,5 +7,17 @@
   },
   "posts/post-with-code/index.qmd": {
     "index.html": "2acb5a61"
+  },
+  "07-nanogpt.ipynb": {
+    "07-nanogpt.html": "478cfe26"
+  },
+  "posts/demo/index.qmd": {
+    "index.html": "c878d8c8"
+  },
+  "posts/transformer-from-scratch/code.ipynb": {
+    "code.html": "4c6c5833"
+  },
+  "07-nanogptv2.ipynb": {
+    "07-nanogptv2.html": "846d19d2"
   }
 }
