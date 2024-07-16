@@ -1,9 +1,6 @@
 [
   {
-    "listing": "/index.html",
-    "items": [
-      "/posts/transformer-from-scratch/code.html",
-      "/posts/demo/index.html"
-    ]
+    "listing": "/blog/index.html",
+    "items": []
   }
 ]

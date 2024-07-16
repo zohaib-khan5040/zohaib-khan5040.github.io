@@ -1,0 +1,12 @@
+{
+  "hash": "3a67f3bb2c8fb19225e7bedf290a5c08",
+  "result": {
+    "engine": "jupyter",
+    "markdown": "---\ntitle: Self-Attention\n---\n\ntesting\n\n::: {#779f7976 .cell execution_count=1}\n``` {.python .cell-code}\nimport torch\n```\n:::\n\n\n",
+    "supporting": [
+      "code_files"
+    ],
+    "filters": [],
+    "includes": {}
+  }
+}

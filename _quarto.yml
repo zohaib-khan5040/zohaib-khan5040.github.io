@@ -3,14 +3,18 @@ project:
   output-dir: docs
 
 website:
-  title: "blog"
+  title: "Zohaib Khan"
   navbar:
     right:
-      - about.qmd
+      - icon: linkedin
+        href: https://www.linkedin.com/in/zohaib-khan-5a76611a6/
       - icon: github
-        href: https://github.com/
-      - icon: twitter
-        href: https://twitter.com
+        href: https://github.com/zohaib-khan5040
+    left:
+      - text: "About"
+        href: about.qmd
+      - text: "Blog"
+        href: blog/index.qmd
 format:
   html:
     theme: cosmo

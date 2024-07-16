@@ -1,0 +1,12 @@
+---
+title: Welcome to my Blog
+subtitle: Inspired by what I wished I had when learning, I aim to demystify concepts and explore the fascinating world of Machine Learning.
+listing:
+  sort: "date desc"
+  contents: "posts"
+  sort-ui: false
+  filter-ui: false
+  categories: true
+  feed: true
+page-layout: full
+---

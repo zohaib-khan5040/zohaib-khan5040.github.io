@@ -19,5 +19,26 @@
   },
   "07-nanogptv2.ipynb": {
     "07-nanogptv2.html": "846d19d2"
+  },
+  "posts/self-attention/code.ipynb": {
+    "code.html": "cb36a989"
+  },
+  "posts/self-attention/code.qmd": {
+    "code.html": "dcb03316"
+  },
+  "posts/self-attention/index.qmd": {
+    "index.html": "ba49bf42"
+  },
+  "blog/self-attention/code.ipynb": {
+    "code.html": "5ab563f3"
+  },
+  "blog/posts/self-attention/code.ipynb": {
+    "code.html": "290495b3"
+  },
+  "blog/index.qmd": {
+    "index.html": "aa68e7da"
+  },
+  "blog/posts/2024-06-13-self-attention/index.ipynb": {
+    "index.html": "f65fce94"
   }
 }

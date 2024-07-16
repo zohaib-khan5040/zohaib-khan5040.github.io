@@ -1,14 +1,13 @@
 ---
-title: "blog"
-listing:
-  contents: posts
-  sort: "date desc"
-  type: default
-  categories: true
-  sort-ui: false
-  filter-ui: false
-page-layout: full
+# title: "Welcome!"
+image: profile.jpg
+about:
+  template: jolla
 title-block-banner: true
 ---
 
+# Welcome!
 
+I'm documenting parts of my learning journey through this blog. If I can't code it, I don't understand it.
+
+If you want to learn more about me, visit the [About Page](about.qmd). If you're looking for something to read, check out my latest [blog posts](blog/index.qmd).
