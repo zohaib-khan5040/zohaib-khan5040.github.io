@@ -1,6 +1,5 @@
 ---
-# title: "Welcome!"
-image: profile.jpg
+image: files/profile.jpg
 about:
   template: jolla
 title-block-banner: true

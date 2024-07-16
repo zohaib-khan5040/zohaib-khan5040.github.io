@@ -4,6 +4,7 @@ project:
 
 website:
   title: "Zohaib Khan"
+  favicon: files/favicon.png
   navbar:
     right:
       - icon: linkedin
@@ -15,6 +16,8 @@ website:
         href: about.qmd
       - text: "Blog"
         href: blog/index.qmd
+      - text: "CV"
+        href: files/cv.pdf
 format:
   html:
     theme: cosmo
