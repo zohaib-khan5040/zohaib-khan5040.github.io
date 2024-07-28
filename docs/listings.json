@@ -1,6 +1,8 @@
 [
   {
     "listing": "/blog/index.html",
-    "items": []
+    "items": [
+      "/blog/posts/2024-06-13-vision-transformer/index.html"
+    ]
   }
 ]
