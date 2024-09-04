@@ -43,5 +43,11 @@
   },
   "blog/posts/2024-06-13-vision-transformer/index.ipynb": {
     "index.html": "921241c7"
+  },
+  "blog/posts/2024-08-15-pruning-pt2/index.ipynb": {
+    "index.html": "ff051a12"
+  },
+  "blog/posts/2024-08-03-pruning-pt1/index.ipynb": {
+    "index.html": "a4f52a55"
   }
 }

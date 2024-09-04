@@ -55,7 +55,27 @@ div.sourceCode
 @media screen {
 pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
-</style>
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+  margin-bottom: 0em;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
 
 
 <script src="../../../site_libs/quarto-nav/quarto-nav.js"></script>
@@ -220,12 +240,12 @@ window.Quarto = {
 
 <section id="introduction-to-vision-transformers" class="level2">
 <h2 class="anchored" data-anchor-id="introduction-to-vision-transformers">Introduction to Vision Transformers</h2>
-<p>Vision Transformers are a rather recent innovation in the field of Computer Vision (though in the fast-paced world of Machine Learning, they are rather old) introduced in the paper <a href="https://arxiv.org/abs/2010.11929">An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale</a>.</p>
-<p>What’s so special about this model is how it departs from traditional Convolutional Neural Network (CNN) type processing, and leverages ideas from Natural Language Processing - the Transformer architecture introduced in 2017 by <a href="https://arxiv.org/abs/1706.03762">Vaswani et al.</a> to perform Machine Translation (an inherently language-based task).</p>
+<p>Vision Transformers are a rather recent innovation in the field of Computer Vision (though in the fast-paced world of Machine Learning, they are rather old) introduced in the paper <span class="citation" data-cites="dosovitskiy2021imageworth16x16words">Dosovitskiy et al. (<a href="#ref-dosovitskiy2021imageworth16x16words" role="doc-biblioref">2021</a>)</span>.</p>
+<p>What’s so special about this model is how it departs from traditional Convolutional Neural Network (CNN) type processing, and leverages ideas from Natural Language Processing - the Transformer architecture introduced in 2017 by <span class="citation" data-cites="vaswani2023attentionneed">Vaswani et al. (<a href="#ref-vaswani2023attentionneed" role="doc-biblioref">2023</a>)</span> to perform Machine Translation (an inherently language-based task).</p>
 <p>At the heart of the Vision Transformer is the concept of self-attention. This mechanism allows the model to weigh the importance of different elements in the input, considering the global context of the data. In the case of NLP, self-attention helps the model understand the relationships between words in a sentence, regardless of their position. Similarly, in the Vision Transformer, self-attention enables the model to capture dependencies between different <strong>patches</strong> of an image, allowing it to learn rich and complex features that are crucial for tasks like image classification and object detection.</p>
 <p>The coolest part of Transformers generally is its ubiquitous nature: with very minor changes (specifically just the Positional and Patch Embedding modules), we can adapt the original architecture to the world of Computer Vision. This means that the same lessons we can learn from this model can be applied just as easily to understanding models like GPT-2 and members of the LLaMA family.</p>
 <p>In this article, we will implement a Vision Transformer from the ground up, load in weights from a pretrained checkpoint, and adapt it to a simple task of Image Classification.</p>
-<p>This implementation has been inspired a lot from the <a href="https://github.com/huggingface/pytorch-image-models/blob/main/timm/models/vision_transformer.py">timm implementation</a> - many of the snippets will be similar but this simplified implementation is intended to give more flexibility in terms of tinkering with the model and bringing in your own tweaks.</p>
+<p>This implementation has been inspired a lot from the <code>timm</code> implementation<span class="citation" data-cites="rw2019timm">(<a href="#ref-rw2019timm" role="doc-biblioref">Wightman 2019</a>)</span> - many of the snippets will be similar but this simplified implementation is intended to give more flexibility in terms of tinkering with the model and bringing in your own tweaks.</p>
 <div id="cell-2" class="cell" data-execution_count="58">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> typing <span class="im">import</span> Optional, Tuple, Callable, Optional, Type, Union</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> functools <span class="im">import</span> partial</span>
@@ -398,7 +418,7 @@ Patchified shape: torch.Size([16, 768, 14, 14])</code></pre>
 </div>
 </div>
 <p>Before moving forward, another important point to note is how we will incorporate a “CLS token” or “classification token” later on for our task of image classification.</p>
-<p>This is a technique borrowed from <a href="https://arxiv.org/abs/1810.04805">BERT</a>, where you have a learnable embedding meant to represent the entire input sequence. In the context of the Vision Transformer, the CLS token is a special token added to the sequence of patch embeddings. It serves as a summary or a representation of the entire image. The model learns this token’s embedding along with the patch embeddings during training.</p>
+<p>This is a technique borrowed from BERT <span class="citation" data-cites="devlin2019bertpretrainingdeepbidirectional">(<a href="#ref-devlin2019bertpretrainingdeepbidirectional" role="doc-biblioref">Devlin et al. 2019</a>)</span>, where you have a learnable embedding meant to represent the entire input sequence. In the context of the Vision Transformer, the CLS token is a special token added to the sequence of patch embeddings. It serves as a summary or a representation of the entire image. The model learns this token’s embedding along with the patch embeddings during training.</p>
 <p>At the end of the transformer layers, the CLS token’s final embedding is used as the input to a classification head, typically a fully connected layer, to predict the class label. This approach allows the model to consider the entire image’s context when making a classification decision, leveraging the self-attention mechanism to gather information from all patches into this single, informative vector.</p>
 <div style="text-align: center;">
 <p><img src="vit.png" alt="vit-layout" style="width:50%;"></p>
@@ -441,7 +461,7 @@ Patchified shape: torch.Size([16, 768, 14, 14])</code></pre>
 <section id="multi-head-self-attention" class="level2">
 <h2 class="anchored" data-anchor-id="multi-head-self-attention">Multi-Head Self Attention</h2>
 <p>Self-attention is a fundamental mechanism in the Vision Transformer that enables patches, or tokens, to communicate with one another across the entire image. This mechanism allows each patch to consider the information from all other patches, effectively sharing and enriching the context of each patch’s representation. In the scene of computer vision, this means that the model can capture relationships and dependencies between different parts of the image, such as identifying that certain shapes or colors in one part of the image may relate to features in another part. This global interaction helps the model build a more comprehensive understanding of the image, crucial for tasks like image classification.</p>
-<p>The Self-Attention mechanism can be expressed with the following expression from <a href="https://arxiv.org/abs/1706.03762">the 2017 paper</a>: <span class="math display">\[\text{Attention}(Q,K,V) = \text{softmax}\left(\frac{Q K^T}{\sqrt{d_k}}\right)V\]</span></p>
+<p>The Self-Attention mechanism can be expressed with the following expression from <span class="citation" data-cites="vaswani2023attentionneed">Vaswani et al. (<a href="#ref-vaswani2023attentionneed" role="doc-biblioref">2023</a>)</span>: <span class="math display">\[\text{Attention}(Q,K,V) = \text{softmax}\left(\frac{Q K^T}{\sqrt{d_k}}\right)V\]</span></p>
 <p>Here, the components are:</p>
 <ul>
 <li>Queries (<span class="math inline">\(Q\)</span>): These represent the specific aspects or “questions” that each patch wants to know about other patches.</li>
@@ -632,7 +652,7 @@ sa_out.shape=torch.Size([16, 197, 768])</code></pre>
 <p><strong>Feed-Forward Neural Network (FFN)</strong>: Following the self-attention layer, a position-wise feed-forward neural network processes the output. This network typically consists of two linear transformations separated by a non-linear activation function, such as GeLU. It acts on each position independently and helps in further transforming and refining the representation learned from the self-attention layer.</p>
 <p>To ensure the effective flow of gradients during training and to preserve the original input information, each sub-layer is equipped with <strong>Skip Connections</strong> (also known as Residual Connections). These connections add the input of each sub-layer to its output, forming a residual path that facilitates better gradient propagation and helps prevent the vanishing gradient problem. Mathematically, this can be expressed as:</p>
 <p><span class="math display">\[\text{Output} = \text{Layernorm}(x + \text{SubLayer}(x))\]</span></p>
-<p>In the equation above, <span class="math inline">\(x\)</span> represents the input to the sub-layer, and the sum <span class="math inline">\(x + \text{SubLayer}(x)\)</span> forms the residual connection. This is a very old idea in Deep Learning, going <a href="https://arxiv.org/abs/1512.03385">back to 2015 with ResNets</a>, and can perhaps be better understood with the following illustration:</p>
+<p>In the equation above, <span class="math inline">\(x\)</span> represents the input to the sub-layer, and the sum <span class="math inline">\(x + \text{SubLayer}(x)\)</span> forms the residual connection. This is a very old idea in Deep Learning, going back to 2015 with ResNets <span class="citation" data-cites="he2015deepresiduallearningimage">(<a href="#ref-he2015deepresiduallearningimage" role="doc-biblioref">He et al. 2015</a>)</span>, and can perhaps be better understood with the following illustration:</p>
 <div style="text-align: center;">
 <p><img src="skip-connection.png" alt="skip-connection" style="width:30%;"></p>
 </div>
@@ -761,117 +781,7 @@ sa_out.shape=torch.Size([16, 197, 768])</code></pre>
 <span id="cb29-27"><a href="#cb29-27" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> forward(<span class="va">self</span>, x: torch.Tensor) <span class="op">-&gt;</span> torch.Tensor:</span>
 <span id="cb29-28"><a href="#cb29-28" aria-hidden="true" tabindex="-1"></a>        x <span class="op">=</span> <span class="va">self</span>.proj(x)</span>
 <span id="cb29-29"><a href="#cb29-29" aria-hidden="true" tabindex="-1"></a>        x <span class="op">=</span> x.flatten(<span class="dv">2</span>).transpose(<span class="dv">1</span>,<span class="dv">2</span>) <span class="co"># flatten and transpose: BCHW -&gt; BLC</span></span>
-<span id="cb29-30"><a href="#cb29-30" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> x</span>
-<span id="cb29-31"><a href="#cb29-31" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb29-32"><a href="#cb29-32" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> MHSA(nn.Module):</span>
-<span id="cb29-33"><a href="#cb29-33" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb29-34"><a href="#cb29-34" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(</span>
-<span id="cb29-35"><a href="#cb29-35" aria-hidden="true" tabindex="-1"></a>            <span class="va">self</span>,</span>
-<span id="cb29-36"><a href="#cb29-36" aria-hidden="true" tabindex="-1"></a>            dim: <span class="bu">int</span>,</span>
-<span id="cb29-37"><a href="#cb29-37" aria-hidden="true" tabindex="-1"></a>            num_heads: <span class="bu">int</span> <span class="op">=</span> <span class="dv">8</span>,</span>
-<span id="cb29-38"><a href="#cb29-38" aria-hidden="true" tabindex="-1"></a>            qkv_bias: <span class="bu">bool</span> <span class="op">=</span> <span class="va">False</span>,</span>
-<span id="cb29-39"><a href="#cb29-39" aria-hidden="true" tabindex="-1"></a>            attn_drop: <span class="bu">float</span> <span class="op">=</span> <span class="fl">0.</span>,</span>
-<span id="cb29-40"><a href="#cb29-40" aria-hidden="true" tabindex="-1"></a>            proj_drop: <span class="bu">float</span> <span class="op">=</span> <span class="fl">0.</span></span>
-<span id="cb29-41"><a href="#cb29-41" aria-hidden="true" tabindex="-1"></a>    ) <span class="op">-&gt;</span> <span class="va">None</span>:</span>
-<span id="cb29-42"><a href="#cb29-42" aria-hidden="true" tabindex="-1"></a>        <span class="bu">super</span>().<span class="fu">__init__</span>()</span>
-<span id="cb29-43"><a href="#cb29-43" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb29-44"><a href="#cb29-44" aria-hidden="true" tabindex="-1"></a>        <span class="cf">assert</span> dim <span class="op">%</span> num_heads <span class="op">==</span> <span class="dv">0</span>, <span class="st">'dim should be divisible by num_heads'</span></span>
-<span id="cb29-45"><a href="#cb29-45" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.dim <span class="op">=</span> dim</span>
-<span id="cb29-46"><a href="#cb29-46" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.num_heads <span class="op">=</span> num_heads</span>
-<span id="cb29-47"><a href="#cb29-47" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.head_dim <span class="op">=</span> dim <span class="op">//</span> num_heads</span>
-<span id="cb29-48"><a href="#cb29-48" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.scale <span class="op">=</span> <span class="va">self</span>.head_dim <span class="op">**</span> <span class="op">-</span><span class="fl">0.5</span></span>
-<span id="cb29-49"><a href="#cb29-49" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb29-50"><a href="#cb29-50" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.q <span class="op">=</span> nn.Linear(dim, dim, bias<span class="op">=</span>qkv_bias)</span>
-<span id="cb29-51"><a href="#cb29-51" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.k <span class="op">=</span> nn.Linear(dim, dim, bias<span class="op">=</span>qkv_bias)</span>
-<span id="cb29-52"><a href="#cb29-52" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.v <span class="op">=</span> nn.Linear(dim, dim, bias<span class="op">=</span>qkv_bias)</span>
-<span id="cb29-53"><a href="#cb29-53" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb29-54"><a href="#cb29-54" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.attn_drop <span class="op">=</span> nn.Dropout(attn_drop)</span>
-<span id="cb29-55"><a href="#cb29-55" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.proj <span class="op">=</span> nn.Linear(dim, dim)</span>
-<span id="cb29-56"><a href="#cb29-56" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.proj_drop <span class="op">=</span> nn.Dropout(proj_drop)</span>
-<span id="cb29-57"><a href="#cb29-57" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb29-58"><a href="#cb29-58" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> forward(<span class="va">self</span>, x: torch.Tensor) <span class="op">-&gt;</span> torch.Tensor:</span>
-<span id="cb29-59"><a href="#cb29-59" aria-hidden="true" tabindex="-1"></a>        B, P, C <span class="op">=</span> x.shape</span>
-<span id="cb29-60"><a href="#cb29-60" aria-hidden="true" tabindex="-1"></a>        H <span class="op">=</span> <span class="va">self</span>.num_heads</span>
-<span id="cb29-61"><a href="#cb29-61" aria-hidden="true" tabindex="-1"></a>        q <span class="op">=</span> <span class="va">self</span>.q(x).view(B, P, H, <span class="op">-</span><span class="dv">1</span>).transpose(<span class="dv">1</span>, <span class="dv">2</span>) <span class="co"># (B, H, P, head_size)</span></span>
-<span id="cb29-62"><a href="#cb29-62" aria-hidden="true" tabindex="-1"></a>        k <span class="op">=</span> <span class="va">self</span>.k(x).view(B, P, H, <span class="op">-</span><span class="dv">1</span>).transpose(<span class="dv">1</span>, <span class="dv">2</span>) <span class="co"># (B, H, P, head_size)</span></span>
-<span id="cb29-63"><a href="#cb29-63" aria-hidden="true" tabindex="-1"></a>        v <span class="op">=</span> <span class="va">self</span>.v(x).view(B, P, H, <span class="op">-</span><span class="dv">1</span>).transpose(<span class="dv">1</span>, <span class="dv">2</span>) <span class="co"># (B, H, P, head_size)</span></span>
-<span id="cb29-64"><a href="#cb29-64" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb29-65"><a href="#cb29-65" aria-hidden="true" tabindex="-1"></a>        q <span class="op">=</span> q <span class="op">*</span> <span class="va">self</span>.scale</span>
-<span id="cb29-66"><a href="#cb29-66" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb29-67"><a href="#cb29-67" aria-hidden="true" tabindex="-1"></a>        attn <span class="op">=</span> q <span class="op">@</span> k.transpose(<span class="op">-</span><span class="dv">2</span>, <span class="op">-</span><span class="dv">1</span>)</span>
-<span id="cb29-68"><a href="#cb29-68" aria-hidden="true" tabindex="-1"></a>        attn <span class="op">=</span> attn.softmax(dim<span class="op">=-</span><span class="dv">1</span>)</span>
-<span id="cb29-69"><a href="#cb29-69" aria-hidden="true" tabindex="-1"></a>        attn <span class="op">=</span> <span class="va">self</span>.attn_drop(attn)</span>
-<span id="cb29-70"><a href="#cb29-70" aria-hidden="true" tabindex="-1"></a>        x <span class="op">=</span> attn <span class="op">@</span> v</span>
-<span id="cb29-71"><a href="#cb29-71" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb29-72"><a href="#cb29-72" aria-hidden="true" tabindex="-1"></a>        x <span class="op">=</span> x.transpose(<span class="dv">1</span>, <span class="dv">2</span>).reshape(B, P, C)</span>
-<span id="cb29-73"><a href="#cb29-73" aria-hidden="true" tabindex="-1"></a>        x <span class="op">=</span> <span class="va">self</span>.proj(x)</span>
-<span id="cb29-74"><a href="#cb29-74" aria-hidden="true" tabindex="-1"></a>        x <span class="op">=</span> <span class="va">self</span>.proj_drop(x)</span>
-<span id="cb29-75"><a href="#cb29-75" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> x</span>
-<span id="cb29-76"><a href="#cb29-76" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb29-77"><a href="#cb29-77" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Mlp(nn.Module):</span>
-<span id="cb29-78"><a href="#cb29-78" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, </span>
-<span id="cb29-79"><a href="#cb29-79" aria-hidden="true" tabindex="-1"></a>                 in_features: <span class="bu">int</span>,</span>
-<span id="cb29-80"><a href="#cb29-80" aria-hidden="true" tabindex="-1"></a>                 hidden_features: <span class="bu">int</span>,</span>
-<span id="cb29-81"><a href="#cb29-81" aria-hidden="true" tabindex="-1"></a>                 drop: <span class="bu">float</span>,</span>
-<span id="cb29-82"><a href="#cb29-82" aria-hidden="true" tabindex="-1"></a>                 norm_layer: nn.Module <span class="op">=</span> <span class="va">None</span>) <span class="op">-&gt;</span> <span class="va">None</span>:</span>
-<span id="cb29-83"><a href="#cb29-83" aria-hidden="true" tabindex="-1"></a>        <span class="bu">super</span>().<span class="fu">__init__</span>()</span>
-<span id="cb29-84"><a href="#cb29-84" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb29-85"><a href="#cb29-85" aria-hidden="true" tabindex="-1"></a>        <span class="co"># There are two Linear layers in the conventional implementation</span></span>
-<span id="cb29-86"><a href="#cb29-86" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.fc1 <span class="op">=</span> nn.Linear(in_features, hidden_features)</span>
-<span id="cb29-87"><a href="#cb29-87" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.fc2 <span class="op">=</span> nn.Linear(hidden_features, in_features)</span>
-<span id="cb29-88"><a href="#cb29-88" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb29-89"><a href="#cb29-89" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Dropout is used twice, once after each linear layer</span></span>
-<span id="cb29-90"><a href="#cb29-90" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.drop1 <span class="op">=</span> nn.Dropout(drop)</span>
-<span id="cb29-91"><a href="#cb29-91" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.drop2 <span class="op">=</span> nn.Dropout(drop)</span>
-<span id="cb29-92"><a href="#cb29-92" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb29-93"><a href="#cb29-93" aria-hidden="true" tabindex="-1"></a>        <span class="co"># The paper uses the GeLU activation function</span></span>
-<span id="cb29-94"><a href="#cb29-94" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.act <span class="op">=</span> nn.GELU()</span>
-<span id="cb29-95"><a href="#cb29-95" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb29-96"><a href="#cb29-96" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Optional normalization layer (following timm's convention)</span></span>
-<span id="cb29-97"><a href="#cb29-97" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.norm <span class="op">=</span> norm_layer(hidden_features) <span class="cf">if</span> norm_layer <span class="kw">is</span> <span class="kw">not</span> <span class="va">None</span> <span class="cf">else</span> nn.Identity()</span>
-<span id="cb29-98"><a href="#cb29-98" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb29-99"><a href="#cb29-99" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> forward(<span class="va">self</span>, x: torch.Tensor) <span class="op">-&gt;</span> torch.Tensor:</span>
-<span id="cb29-100"><a href="#cb29-100" aria-hidden="true" tabindex="-1"></a>        x <span class="op">=</span> <span class="va">self</span>.fc1(x)</span>
-<span id="cb29-101"><a href="#cb29-101" aria-hidden="true" tabindex="-1"></a>        x <span class="op">=</span> <span class="va">self</span>.act(x)</span>
-<span id="cb29-102"><a href="#cb29-102" aria-hidden="true" tabindex="-1"></a>        x <span class="op">=</span> <span class="va">self</span>.drop1(x)</span>
-<span id="cb29-103"><a href="#cb29-103" aria-hidden="true" tabindex="-1"></a>        x <span class="op">=</span> <span class="va">self</span>.norm(x)</span>
-<span id="cb29-104"><a href="#cb29-104" aria-hidden="true" tabindex="-1"></a>        x <span class="op">=</span> <span class="va">self</span>.fc2(x)</span>
-<span id="cb29-105"><a href="#cb29-105" aria-hidden="true" tabindex="-1"></a>        x <span class="op">=</span> <span class="va">self</span>.drop2(x)</span>
-<span id="cb29-106"><a href="#cb29-106" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> x</span>
-<span id="cb29-107"><a href="#cb29-107" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb29-108"><a href="#cb29-108" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Block(nn.Module):</span>
-<span id="cb29-109"><a href="#cb29-109" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(</span>
-<span id="cb29-110"><a href="#cb29-110" aria-hidden="true" tabindex="-1"></a>            <span class="va">self</span>,</span>
-<span id="cb29-111"><a href="#cb29-111" aria-hidden="true" tabindex="-1"></a>            dim: <span class="bu">int</span>,</span>
-<span id="cb29-112"><a href="#cb29-112" aria-hidden="true" tabindex="-1"></a>            num_heads: <span class="bu">int</span>,</span>
-<span id="cb29-113"><a href="#cb29-113" aria-hidden="true" tabindex="-1"></a>            mlp_ratio: <span class="bu">float</span> <span class="op">=</span> <span class="fl">4.</span>,</span>
-<span id="cb29-114"><a href="#cb29-114" aria-hidden="true" tabindex="-1"></a>            qkv_bias: <span class="bu">bool</span> <span class="op">=</span> <span class="va">False</span>,</span>
-<span id="cb29-115"><a href="#cb29-115" aria-hidden="true" tabindex="-1"></a>            proj_drop: <span class="bu">float</span> <span class="op">=</span> <span class="fl">0.</span>,</span>
-<span id="cb29-116"><a href="#cb29-116" aria-hidden="true" tabindex="-1"></a>            attn_drop: <span class="bu">float</span> <span class="op">=</span> <span class="fl">0.</span>,</span>
-<span id="cb29-117"><a href="#cb29-117" aria-hidden="true" tabindex="-1"></a>    ) <span class="op">-&gt;</span> <span class="va">None</span>:</span>
-<span id="cb29-118"><a href="#cb29-118" aria-hidden="true" tabindex="-1"></a>        <span class="bu">super</span>().<span class="fu">__init__</span>()</span>
-<span id="cb29-119"><a href="#cb29-119" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb29-120"><a href="#cb29-120" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.norm1 <span class="op">=</span> nn.LayerNorm(dim)</span>
-<span id="cb29-121"><a href="#cb29-121" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.norm2 <span class="op">=</span> nn.LayerNorm(dim)</span>
-<span id="cb29-122"><a href="#cb29-122" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb29-123"><a href="#cb29-123" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.mlp <span class="op">=</span> Mlp(</span>
-<span id="cb29-124"><a href="#cb29-124" aria-hidden="true" tabindex="-1"></a>            in_features<span class="op">=</span>dim,</span>
-<span id="cb29-125"><a href="#cb29-125" aria-hidden="true" tabindex="-1"></a>            hidden_features<span class="op">=</span><span class="bu">int</span>(dim <span class="op">*</span> mlp_ratio),</span>
-<span id="cb29-126"><a href="#cb29-126" aria-hidden="true" tabindex="-1"></a>            drop<span class="op">=</span>proj_drop,</span>
-<span id="cb29-127"><a href="#cb29-127" aria-hidden="true" tabindex="-1"></a>        )</span>
-<span id="cb29-128"><a href="#cb29-128" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb29-129"><a href="#cb29-129" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.attn <span class="op">=</span> MHSA(</span>
-<span id="cb29-130"><a href="#cb29-130" aria-hidden="true" tabindex="-1"></a>            dim<span class="op">=</span>dim,</span>
-<span id="cb29-131"><a href="#cb29-131" aria-hidden="true" tabindex="-1"></a>            num_heads<span class="op">=</span>num_heads,</span>
-<span id="cb29-132"><a href="#cb29-132" aria-hidden="true" tabindex="-1"></a>            qkv_bias<span class="op">=</span>qkv_bias,</span>
-<span id="cb29-133"><a href="#cb29-133" aria-hidden="true" tabindex="-1"></a>            attn_drop<span class="op">=</span>attn_drop,</span>
-<span id="cb29-134"><a href="#cb29-134" aria-hidden="true" tabindex="-1"></a>            proj_drop<span class="op">=</span>proj_drop</span>
-<span id="cb29-135"><a href="#cb29-135" aria-hidden="true" tabindex="-1"></a>        )</span>
-<span id="cb29-136"><a href="#cb29-136" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb29-137"><a href="#cb29-137" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> forward(<span class="va">self</span>, x: torch.Tensor) <span class="op">-&gt;</span> torch.Tensor:</span>
-<span id="cb29-138"><a href="#cb29-138" aria-hidden="true" tabindex="-1"></a>        x <span class="op">=</span> x <span class="op">+</span> <span class="va">self</span>.attn(<span class="va">self</span>.norm1(x))</span>
-<span id="cb29-139"><a href="#cb29-139" aria-hidden="true" tabindex="-1"></a>        x <span class="op">=</span> x <span class="op">+</span> <span class="va">self</span>.mlp(<span class="va">self</span>.norm2(x))</span>
-<span id="cb29-140"><a href="#cb29-140" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> x</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb29-30"><a href="#cb29-30" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> x</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div id="cell-30" class="cell" data-execution_count="50">
 <div class="sourceCode cell-code" id="cb30"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> VisionTransformer(nn.Module):</span>
@@ -1003,8 +913,8 @@ sa_out.shape=torch.Size([16, 197, 768])</code></pre>
 <h2 class="anchored" data-anchor-id="loading-in-pretrained-weights">Loading in Pretrained Weights</h2>
 <p>Now that we’ve built our simplistic version of a Vision Transformer, let’s load in the parameters from a pretrained checkpoint, specifically from the Base variant of the <code>timm</code> library.</p>
 <p>The procedure is simple: load in the <code>state_dict</code> from the pretrained model, and match with the corresponding parameters in your implementation. Since we were careful to stick with a naming convention similar to the implementation already in <code>timm</code>, we’ve made our job simpler already.</p>
-<p>We will do this in a slightly unconventional way - we will define methods for loading in the parameters in <strong>each module</strong>. This makes our code arguably more readable, but requires us to rewrite the module again for the third time in this article (last time, promise!).</p>
-<p>This form of matching and copying has been inspired from <a href="https://github.com/rasbt/LLMs-from-scratch">Sebastian Raschka’s book on “LLMs from Scratch”</a>, specifically <a href="https://github.com/rasbt/LLMs-from-scratch/blob/main/ch05/01_main-chapter-code/ch05.ipynb">this notebook</a>.</p>
+<p>We will do this in a slightly unconventional way - we will define methods for loading in the parameters in <strong>each module</strong>. This makes our code arguably more readable, but requires us to rewrite the module again for the purposes of this article (last time, promise!).</p>
+<p>This form of matching and copying has been inspired from Sebastian Raschka’s book on “LLMs from Scratch” <span class="citation" data-cites="build-llms-from-scratch-book">(<a href="#ref-build-llms-from-scratch-book" role="doc-biblioref">Raschka 2024</a>)</span>, specifically <a href="https://github.com/rasbt/LLMs-from-scratch/blob/main/ch05/01_main-chapter-code/ch05.ipynb">this notebook</a>.</p>
 <div id="cell-33" class="cell" data-execution_count="52">
 <div class="sourceCode cell-code" id="cb33"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> assign_check(left: torch.Tensor, right: torch.Tensor):</span>
 <span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">'''Utility for checking and creating parameters to be used in loading a pretrained checkpoint'''</span></span>
@@ -1548,14 +1458,31 @@ Files already downloaded and verified</code></pre>
 </div>
 <p>Hopefully you can appreciate what we’ve built together from start to end.</p>
 <p>You can use the same type of recipe to make a BERT clone, the only real differences there would be (1) the data munging, (2) the positional encodings, and (3) the token embeddings in place of the patch embeddings. Otherwise, the same general principles would apply here and big chunks of the same code can be copied verbatim.</p>
-</section>
-<section id="fin." class="level1">
-<h1>Fin.</h1>
+
 
 
 </section>
 
-</main> <!-- /main -->
+<div id="quarto-appendix" class="default"><section class="quarto-appendix-contents" role="doc-bibliography" id="quarto-bibliography"><h2 class="anchored quarto-appendix-heading">References</h2><div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list">
+<div id="ref-devlin2019bertpretrainingdeepbidirectional" class="csl-entry" role="listitem">
+Devlin, Jacob, Ming-Wei Chang, Kenton Lee, and Kristina Toutanova. 2019. <span>“BERT: Pre-Training of Deep Bidirectional Transformers for Language Understanding.”</span> <a href="https://arxiv.org/abs/1810.04805">https://arxiv.org/abs/1810.04805</a>.
+</div>
+<div id="ref-dosovitskiy2021imageworth16x16words" class="csl-entry" role="listitem">
+Dosovitskiy, Alexey, Lucas Beyer, Alexander Kolesnikov, Dirk Weissenborn, Xiaohua Zhai, Thomas Unterthiner, Mostafa Dehghani, et al. 2021. <span>“An Image Is Worth 16x16 Words: Transformers for Image Recognition at Scale.”</span> <a href="https://arxiv.org/abs/2010.11929">https://arxiv.org/abs/2010.11929</a>.
+</div>
+<div id="ref-he2015deepresiduallearningimage" class="csl-entry" role="listitem">
+He, Kaiming, Xiangyu Zhang, Shaoqing Ren, and Jian Sun. 2015. <span>“Deep Residual Learning for Image Recognition.”</span> <a href="https://arxiv.org/abs/1512.03385">https://arxiv.org/abs/1512.03385</a>.
+</div>
+<div id="ref-build-llms-from-scratch-book" class="csl-entry" role="listitem">
+Raschka, Sebastian. 2024. <em>Build a Large Language Model (from Scratch)</em>. Manning. <a href="https://www.manning.com/books/build-a-large-language-model-from-scratch">https://www.manning.com/books/build-a-large-language-model-from-scratch</a>.
+</div>
+<div id="ref-vaswani2023attentionneed" class="csl-entry" role="listitem">
+Vaswani, Ashish, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones, Aidan N. Gomez, Lukasz Kaiser, and Illia Polosukhin. 2023. <span>“Attention Is All You Need.”</span> <a href="https://arxiv.org/abs/1706.03762">https://arxiv.org/abs/1706.03762</a>.
+</div>
+<div id="ref-rw2019timm" class="csl-entry" role="listitem">
+Wightman, Ross. 2019. <span>“PyTorch Image Models.”</span> <em>GitHub Repository</em>. <a href="https://github.com/rwightman/pytorch-image-models" class="uri">https://github.com/rwightman/pytorch-image-models</a>; GitHub. <a href="https://doi.org/10.5281/zenodo.4414861">https://doi.org/10.5281/zenodo.4414861</a>.
+</div>
+</div></section></div></main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
 window.document.addEventListener("DOMContentLoaded", function (event) {
   const toggleBodyColorMode = (bsSheetEl) => {

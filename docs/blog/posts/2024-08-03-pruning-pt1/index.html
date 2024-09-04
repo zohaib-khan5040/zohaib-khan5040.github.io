@@ -1,0 +1,1263 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.4.554">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="dcterms.date" content="2024-08-03">
+
+<title>Zohaib Khan - An Introduction to Pruning (Part 1)</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+  margin-bottom: 0em;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../">
+<link href="../../../files/favicon.png" rel="icon" type="image/png">
+<script src="../../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../../../styles.css">
+</head>
+
+<body class="nav-fixed fullcontent">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../../index.html">
+    <span class="navbar-title">Zohaib Khan</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../../about.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../blog/index.html"> 
+<span class="menu-text">Blog</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../../files/cv.pdf"> 
+<span class="menu-text">CV</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://www.linkedin.com/in/zohaib-khan-5a76611a6/"> <i class="bi bi-linkedin" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/zohaib-khan5040"> <i class="bi bi-github" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+          <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">An Introduction to Pruning (Part 1)</h1>
+                      </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">August 3, 2024</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+
+<section id="an-introduction-to-pruning-with-cnns" class="level1">
+<h1>An Introduction to Pruning with CNNs</h1>
+<p><strong>Neural network compression</strong> refers to a general suite of techniques used to reduce the size and computational complexity of deep learning models. As models grow increasingly large and complex, especially with the advent of deep architectures like ResNets, Vision Transformers, and Large Language Models (LLMs) like GPT, the demand for resources—both in terms of memory and computation—also escalates. This often limits the deployment of such models to environments with abundant resources, like data centers with specialized hardware. However, in many real-world applications, especially on edge devices, there is a critical need to run these models efficiently without sacrificing too much accuracy. Neural network compression addresses this need by reducing model size, which in turn lowers memory usage, speeds up inference times, and makes models more feasible to deploy in resource-constrained environments.</p>
+<p>Pruning is a specific technique within the broader field of neural network compression, originating from <span class="citation" data-cites="NIPS1989_6c9882bb">LeCun, Denker, and Solla (<a href="#ref-NIPS1989_6c9882bb" role="doc-biblioref">1989</a>)</span>. It involves systematically removing parts of the neural network that are deemed unnecessary or less important, thereby simplifying the model. The underlying idea is that not all parts of a neural network contribute equally to its final output. By identifying and removing less important components—such as weights, neurons, or even entire layers—pruning can maintain the model’s performance while significantly reducing its size and complexity.</p>
+<p>Pruning mechanisms typically involve evaluating the <em>importance</em> of different parts of a neural network based on certain criteria, such as the magnitude of weights or the activation levels. One common approach is to use the norms of these weights or activations—like the L1 or L2 norm—as a measure of their importance. Weights or activations with lower norms are often considered less critical and are candidates for pruning. By setting a threshold, parts of the network that fall below this threshold can be pruned, while the more significant components are retained. This selective pruning allows the model to remain functional, albeit in a more compact form.</p>
+<div style="text-align: center;">
+<p><img src="https://miro.medium.com/v2/resize:fit:967/1*rw2zAHw9Xlm7nSq1PCKbzQ.png" alt="pruning-styles" style="width:60%;"></p>
+</div>
+<p>As can be seen in the image above (<a href="https://miro.medium.com/v2/resize:fit:967/1*rw2zAHw9Xlm7nSq1PCKbzQ.png">source</a>), pruning can be applied at various levels of granularity, ranging from fine-grained to more coarse-grained methods. Fine-grained pruning involves removing individual weights or neurons, offering the most precise level of control. This approach can lead to highly compact models but may require more sophisticated techniques to maintain performance. On the other end of the spectrum, coarse-grained pruning might involve removing entire channels or even layers from a model. For instance, in convolutional neural networks (CNNs), pruning might target entire filters or channels within a layer, leading to a more regular and structured reduction in model size. This type of pruning is often easier to implement and can lead to more predictable improvements in efficiency.</p>
+<p>Pruning is not just limited to CNNs; it also has significant applicability to Large Language Models (LLMs), which are primarily composed of linear layers. Given the vast number of parameters in these models, pruning can be an effective way to reduce their size and make them more suitable for deployment in environments with limited resources. In LLMs, pruning might involve reducing the number of units in fully connected layers or simplifying the attention mechanisms. This can result in models that maintain their ability to understand and generate language while being much more efficient to run.</p>
+<p>In this blog, we will focus on applying pruning techniques to Convolutional Neural Networks (CNNs). CNNs are particularly interesting for pruning because of their inherently structured nature, which makes them amenable to different granularities of pruning. This will be similar to the methodology followed in <span class="citation" data-cites="han2015learningweightsconnectionsefficient">Han et al. (<a href="#ref-han2015learningweightsconnectionsefficient" role="doc-biblioref">2015</a>)</span>.</p>
+<p>Much of the code has been inspired from the labs of the <a href="https://hanlab.mit.edu/courses/2024-fall-65940">EfficientML.ai course by MIT</a>, which delves into efficient machine learning techniques. By examining CNNs through the lens of pruning, we aim to demonstrate how these techniques can be applied in practice to create more efficient models without compromising too much on performance.</p>
+<div id="cell-2" class="cell" data-execution_count="1">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> torch</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> torch.nn <span class="im">as</span> nn</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> torch.utils.data <span class="im">import</span> DataLoader</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> torchvision</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> torchvision.models <span class="im">import</span> vgg16, VGG16_Weights</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> torchvision <span class="im">import</span> datasets</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> tqdm <span class="im">import</span> tqdm</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<section id="readying-our-model-and-data" class="level2">
+<h2 class="anchored" data-anchor-id="readying-our-model-and-data">Readying our Model and Data</h2>
+<p>We’ll start by downloading a pretrained VGG-16 model from <code>torchvision.models</code>. This allows us to utilize the pretrained model’s learned features, providing a strong starting point for our pruning efforts.</p>
+<p>We’ll then evaluate its size and performance on the CIFAR-10 dataset after a little fine-tuning. This initial evaluation will help us establish a baseline, allowing us to understand the model’s current capabilities in terms of both accuracy and resource usage. By doing so, we can better assess the impact of pruning techniques when we later modify the model to be more efficient. This benchmark will serve as a crucial reference as we explore different pruning strategies, ensuring that any changes we make can be directly compared to the original model’s performance.</p>
+<div id="cell-4" class="cell" data-execution_count="2">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>weights <span class="op">=</span> VGG16_Weights.DEFAULT</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> vgg16(weights<span class="op">=</span>weights)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-5" class="cell" data-execution_count="3">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>batch_size <span class="op">=</span> <span class="dv">64</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>root <span class="op">=</span> <span class="st">"./data"</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>train_ds <span class="op">=</span> datasets.CIFAR10(root<span class="op">=</span>root,</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>                            train<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>                            download<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>                            transform<span class="op">=</span>weights.transforms())</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>test_ds <span class="op">=</span> datasets.CIFAR10(root<span class="op">=</span>root,</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>                           train<span class="op">=</span><span class="va">False</span>,</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>                           download<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>                           transform<span class="op">=</span>weights.transforms())</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>train_dl <span class="op">=</span> DataLoader(train_ds, </span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>                      batch_size<span class="op">=</span>batch_size,</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>                      shuffle<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>test_dl <span class="op">=</span> DataLoader(test_ds, </span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>                      batch_size<span class="op">=</span>batch_size,</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>                      shuffle<span class="op">=</span><span class="va">False</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Files already downloaded and verified
+Files already downloaded and verified</code></pre>
+</div>
+</div>
+<div id="cell-6" class="cell" data-execution_count="4">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> train_step(model, dataloader, criterion, optimizer, device):</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    model.train()</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    train_loss <span class="op">=</span> <span class="fl">0.</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    train_acc <span class="op">=</span> <span class="fl">0.</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> step, (X, y) <span class="kw">in</span> tqdm(<span class="bu">enumerate</span>(dataloader), desc<span class="op">=</span><span class="st">"Training"</span>, leave<span class="op">=</span><span class="va">False</span>):</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>        X, y <span class="op">=</span> X.to(device), y.to(device)</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>        logits <span class="op">=</span> model(X)</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>        loss <span class="op">=</span> criterion(logits, y)</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>        train_loss <span class="op">+=</span> loss.item()</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>        optimizer.zero_grad()</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>        loss.backward()</span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>        optimizer.step()</span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>        y_pred <span class="op">=</span> torch.argmax(logits.detach(), dim<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>        train_acc <span class="op">+=</span> ((y_pred <span class="op">==</span> y).<span class="bu">sum</span>().item() <span class="op">/</span> <span class="bu">len</span>(y))</span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>    train_loss <span class="op">=</span> train_loss <span class="op">/</span> <span class="bu">len</span>(dataloader)</span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>    train_acc <span class="op">=</span> train_acc <span class="op">/</span> <span class="bu">len</span>(dataloader)</span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> train_loss, train_acc</span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a><span class="at">@torch.inference_mode</span>()</span>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> eval_step(model, dataloader, criterion, device):</span>
+<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a>    model.<span class="bu">eval</span>()</span>
+<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a>    eval_loss <span class="op">=</span> <span class="fl">0.</span></span>
+<span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a>    eval_acc <span class="op">=</span> <span class="fl">0.</span></span>
+<span id="cb5-36"><a href="#cb5-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-37"><a href="#cb5-37" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> (X, y) <span class="kw">in</span> tqdm(dataloader, desc<span class="op">=</span><span class="st">"Evaluating"</span>, leave<span class="op">=</span><span class="va">False</span>):</span>
+<span id="cb5-38"><a href="#cb5-38" aria-hidden="true" tabindex="-1"></a>        X, y <span class="op">=</span> X.to(device), y.to(device)</span>
+<span id="cb5-39"><a href="#cb5-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-40"><a href="#cb5-40" aria-hidden="true" tabindex="-1"></a>        logits <span class="op">=</span> model(X)</span>
+<span id="cb5-41"><a href="#cb5-41" aria-hidden="true" tabindex="-1"></a>        loss <span class="op">=</span> criterion(logits, y)</span>
+<span id="cb5-42"><a href="#cb5-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-43"><a href="#cb5-43" aria-hidden="true" tabindex="-1"></a>        eval_loss <span class="op">+=</span> loss.item()</span>
+<span id="cb5-44"><a href="#cb5-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-45"><a href="#cb5-45" aria-hidden="true" tabindex="-1"></a>        y_pred <span class="op">=</span> torch.argmax(logits.detach(), dim<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb5-46"><a href="#cb5-46" aria-hidden="true" tabindex="-1"></a>        eval_acc <span class="op">+=</span> ((y_pred <span class="op">==</span> y).<span class="bu">sum</span>().item() <span class="op">/</span> <span class="bu">len</span>(y))</span>
+<span id="cb5-47"><a href="#cb5-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-48"><a href="#cb5-48" aria-hidden="true" tabindex="-1"></a>    eval_loss <span class="op">=</span> eval_loss <span class="op">/</span> <span class="bu">len</span>(dataloader)</span>
+<span id="cb5-49"><a href="#cb5-49" aria-hidden="true" tabindex="-1"></a>    eval_acc <span class="op">=</span> eval_acc <span class="op">/</span> <span class="bu">len</span>(dataloader)</span>
+<span id="cb5-50"><a href="#cb5-50" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> eval_loss, eval_acc</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-7" class="cell" data-execution_count="5">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Finetune the model for 3 epochs</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>learning_rate <span class="op">=</span> <span class="fl">1e-4</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>epochs <span class="op">=</span> <span class="dv">3</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>criterion <span class="op">=</span> nn.CrossEntropyLoss()</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>optimizer <span class="op">=</span> torch.optim.AdamW(model.parameters(), lr<span class="op">=</span>learning_rate)</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>device <span class="op">=</span> <span class="st">"cuda"</span> <span class="cf">if</span> torch.cuda.is_available() <span class="cf">else</span> <span class="st">"cpu"</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>model.to(device)</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> epoch <span class="kw">in</span> tqdm(<span class="bu">range</span>(epochs), desc<span class="op">=</span><span class="st">"Epochs"</span>):</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>    train_loss, train_acc <span class="op">=</span> train_step(model, train_dl, criterion, optimizer, device)</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>    val_loss, val_acc <span class="op">=</span> eval_step(model, test_dl, criterion, device)</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"Epoch </span><span class="sc">{</span>epoch<span class="op">+</span><span class="dv">1</span><span class="sc">}</span><span class="ss">... Train Accuracy: </span><span class="sc">{</span>train_acc<span class="sc">:.2f}</span><span class="ss"> | Validation Accuracy: </span><span class="sc">{</span>val_acc<span class="sc">:.2f}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Epochs:  33%|███▎      | 1/3 [03:09&lt;06:19, 189.96s/it]Epochs:  67%|██████▋   | 2/3 [06:18&lt;03:08, 188.85s/it]Epochs: 100%|██████████| 3/3 [09:27&lt;00:00, 189.08s/it]</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Epoch 1... Train Accuracy: 0.77 | Validation Accuracy: 0.86
+Epoch 2... Train Accuracy: 0.91 | Validation Accuracy: 0.89
+Epoch 3... Train Accuracy: 0.95 | Validation Accuracy: 0.90</code></pre>
+</div>
+</div>
+<div id="cell-8" class="cell" data-execution_count="6">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>ckpt_path <span class="op">=</span> <span class="st">"vgg16.pth"</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>torch.save(model.state_dict(), ckpt_path)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We’ll define some utilities to get the number of parameters here and the size of the model in MB.</p>
+<div id="cell-10" class="cell" data-execution_count="7">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Reference: https://hanlab.mit.edu/courses/2024-fall-65940</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> get_num_parameters(model: nn.Module, count_nonzero_only<span class="op">=</span><span class="va">False</span>) <span class="op">-&gt;</span> <span class="bu">int</span>:</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="co">    calculate the total number of parameters of model</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="co">    :param count_nonzero_only: only count nonzero weights</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="co">    """</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>    num_counted_elements <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> param <span class="kw">in</span> model.parameters():</span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> count_nonzero_only:</span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>            num_counted_elements <span class="op">+=</span> param.count_nonzero()</span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>        <span class="cf">else</span>:</span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>            num_counted_elements <span class="op">+=</span> param.numel()</span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> num_counted_elements</span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> get_model_size(model: nn.Module, data_width<span class="op">=</span><span class="dv">32</span>, count_nonzero_only<span class="op">=</span><span class="va">False</span>) <span class="op">-&gt;</span> <span class="bu">int</span>:</span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""</span></span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a><span class="co">    calculate the model size in bits</span></span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a><span class="co">    :param data_width: #bits per element</span></span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a><span class="co">    :param count_nonzero_only: only count nonzero weights</span></span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a><span class="co">    """</span></span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> get_num_parameters(model, count_nonzero_only) <span class="op">*</span> data_width</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="cell-11" class="cell" data-execution_count="8">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Get original model size and benchmark accuracy</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>MB <span class="op">=</span> <span class="dv">8</span> <span class="op">*</span> <span class="dv">1024</span><span class="op">**</span><span class="dv">2</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>orig_model_size <span class="op">=</span> get_model_size(model)</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>_, orig_acc <span class="op">=</span> eval_step(model, test_dl, criterion, device)</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Original model accuracy: </span><span class="sc">{</span>orig_acc<span class="sc">:.4f}</span><span class="ss">"</span>)</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Original model size: </span><span class="sc">{</span>orig_model_size<span class="op">/</span>(MB)<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                             </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Original model accuracy: 0.8985
+Original model size: 527.7921447753906</code></pre>
+</div>
+</div>
+</section>
+<section id="starting-with-pruning" class="level2">
+<h2 class="anchored" data-anchor-id="starting-with-pruning">Starting with Pruning</h2>
+<p>The objective of pruning is to zero out the “unimportant” parts of the tensors within a neural network, effectively reducing the model’s complexity without significantly impacting its performance. To determine which parts of the tensor are “unimportant,” we rely on a heuristic that considers the absolute values of the tensor’s elements. The idea is that values closer to zero contribute less to the network’s overall function and can be pruned away with minimal impact. Mathematically, this heuristic can be expressed as <span class="math inline">\(\text{importance} = |W|\)</span>, where $ W$ represents the weights of the network.</p>
+<p>We begin with <strong>fine-grained pruning</strong>, where individual connections with the lowest importance are removed.</p>
+<p>This method allows us to carefully trim down the network by eliminating the least important elements of the weight tensors. To implement this, we can define a target sparsity level that we aim to achieve in the tensors. Using our heuristic, we can establish a threshold corresponding to this target sparsity, which guides us in creating a mask that zeros out the appropriate parts of the weight tensor.</p>
+<p>Let’s explore this approach in code below.</p>
+<div id="cell-13" class="cell" data-execution_count="9">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>target_sparsity <span class="op">=</span> <span class="fl">0.6</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Grab the weights of a conv layer</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>x <span class="op">=</span> model.features[<span class="dv">0</span>].weight.data.detach().cpu()</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>num_el <span class="op">=</span> x.numel()</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Number of elements in x: </span><span class="sc">{</span>num_el<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Visualize the distribution</span></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>bins <span class="op">=</span> <span class="dv">256</span></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>plt.hist(x.view(<span class="op">-</span><span class="dv">1</span>), bins<span class="op">=</span>bins, density<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Number of elements in x: 1728</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="index_files/figure-html/cell-10-output-2.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>The distribution of the values in the tensor, as illustrated by the bell(-ish) curve in the figure, shows that most of the values cluster near the center, indicating that they have low magnitudes and are close to zero.</p>
+<p>This distribution is beneficial for pruning because the majority of the tensor’s values are not crucial to the network’s performance. When we apply thresholding, we effectively cut out the values near the center of the curve, which correspond to the less important elements.</p>
+<p>By focusing on retaining the heavier elements found at the tails of the distribution, which have higher magnitudes and are likely more significant to the model’s functionality, we can prune a substantial number of elements. This method allows us to reduce the size of the network considerably while preserving the most critical connections that contribute to the model’s predictive power.</p>
+<div id="cell-15" class="cell" data-execution_count="10">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>importance <span class="op">=</span> torch.<span class="bu">abs</span>(x)</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>num_zeros <span class="op">=</span> <span class="bu">int</span>(target_sparsity <span class="op">*</span> num_el)</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"We want to have </span><span class="sc">{</span>num_zeros<span class="sc">}</span><span class="ss"> zeros in our tensor of </span><span class="sc">{</span>num_el<span class="sc">}</span><span class="ss"> elements."</span>)</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="co"># The threshold is defined by the kth smallest magnitude of the (flattened) tensor</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>threshold <span class="op">=</span> torch.kthvalue(</span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>    <span class="bu">input</span><span class="op">=</span>importance.view(<span class="op">-</span><span class="dv">1</span>),</span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>    k<span class="op">=</span>num_zeros</span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>).values</span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Threshold magnitude to prune under: </span><span class="sc">{</span>threshold<span class="sc">:.3f}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>We want to have 1036 zeros in our tensor of 1728 elements.
+Threshold magnitude to prune under: 0.173</code></pre>
+</div>
+</div>
+<p>To implement pruning, we start by creating a mask that identifies the elements to keep and the ones to zero out. The mask assigns a value of 1 to the elements that are above our threshold, indicating they are important and should be retained, while elements below the threshold are set to 0. This mask is then applied to the weight matrix, effectively zeroing out the elements deemed unimportant based on their low magnitudes.</p>
+<p>After applying the mask, a significant portion of the weight matrix—specifically, the amount corresponding to our target sparsity—will be pruned, resulting in many values being zeroed out. This reduction should be visible when we plot a histogram of the non-zero values in the weight matrix. The histogram will appear much more sparse, reflecting the substantial decrease in the number of active connections in the network. This visual change highlights the effectiveness of the pruning process in achieving our desired level of sparsity.</p>
+<div id="cell-17" class="cell" data-execution_count="11">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>mask <span class="op">=</span> (importance <span class="op">&gt;</span> threshold)</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>pruned_x <span class="op">=</span> x.mul_(mask)</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>pruned_els <span class="op">=</span> num_el <span class="op">-</span> pruned_x.count_nonzero()</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Found </span><span class="sc">{</span>pruned_els<span class="sc">}</span><span class="ss"> zeros post-pruning."</span>)</span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>to_plot <span class="op">=</span> pruned_x.view(<span class="op">-</span><span class="dv">1</span>)</span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>to_plot <span class="op">=</span> to_plot[to_plot <span class="op">!=</span> <span class="dv">0</span>].view(<span class="op">-</span><span class="dv">1</span>)</span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>plt.hist(to_plot, bins<span class="op">=</span>bins, density<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Found 1036 zeros post-pruning.</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="index_files/figure-html/cell-12-output-2.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="pruning-our-model" class="level2">
+<h2 class="anchored" data-anchor-id="pruning-our-model">Pruning our Model</h2>
+<p>Now that we’ve explored the basics of pruning at the tensor level, we can start applying this technique to the entire VGG model. To streamline the pruning process across the model’s numerous layers, we’ll implement a utility class called <code>FineGrainedPruner</code>. This class will encapsulate the pruning procedure, allowing us to apply it systematically to every weight tensor in the model.</p>
+<p>The <code>FineGrainedPruner</code> class will make it easy to perform pruning across the entire VGG model. Thanks to PyTorch’s flexible architecture, we can individually access the weights of each layer within the model, making it straightforward to apply the pruning mask to every relevant tensor. By iterating through the model’s layers, the <code>FineGrainedPruner</code> will ensure that all unimportant connections are zeroed out, reducing the model’s complexity while maintaining its overall performance.</p>
+<div id="cell-19" class="cell" data-execution_count="12">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Reference: https://hanlab.mit.edu/courses/2024-fall-65940</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="at">@torch.no_grad</span>()</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> fine_grained_prune(tensor: torch.Tensor, sparsity: <span class="bu">float</span>) <span class="op">-&gt;</span> torch.Tensor:</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""</span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a><span class="co">    Perform magnitude-based pruning for a single tensor.</span></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a><span class="co">    :param tensor: torch.(cuda.)Tensor, weight of conv/fc layer</span></span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a><span class="co">    :param sparsity: float, pruning sparsity</span></span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a><span class="co">        sparsity = #zeros / #elements = 1 - #nonzeros / #elements</span></span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a><span class="co">    :return: torch.(cuda.)Tensor, mask for zeros</span></span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a><span class="co">    """</span></span>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a>    sparsity <span class="op">=</span> <span class="bu">min</span>(<span class="bu">max</span>(<span class="fl">0.0</span>, sparsity), <span class="fl">1.0</span>)</span>
+<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> sparsity <span class="op">==</span> <span class="fl">1.0</span>:</span>
+<span id="cb20-15"><a href="#cb20-15" aria-hidden="true" tabindex="-1"></a>        tensor.zero_()</span>
+<span id="cb20-16"><a href="#cb20-16" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> torch.zeros_like(tensor)</span>
+<span id="cb20-17"><a href="#cb20-17" aria-hidden="true" tabindex="-1"></a>    <span class="cf">elif</span> sparsity <span class="op">==</span> <span class="fl">0.0</span>:</span>
+<span id="cb20-18"><a href="#cb20-18" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> torch.ones_like(tensor)</span>
+<span id="cb20-19"><a href="#cb20-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-20"><a href="#cb20-20" aria-hidden="true" tabindex="-1"></a>    num_elements <span class="op">=</span> tensor.numel()</span>
+<span id="cb20-21"><a href="#cb20-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-22"><a href="#cb20-22" aria-hidden="true" tabindex="-1"></a>    num_zeros <span class="op">=</span> <span class="bu">round</span>(num_elements <span class="op">*</span> sparsity)</span>
+<span id="cb20-23"><a href="#cb20-23" aria-hidden="true" tabindex="-1"></a>    importance <span class="op">=</span> torch.<span class="bu">abs</span>(tensor)</span>
+<span id="cb20-24"><a href="#cb20-24" aria-hidden="true" tabindex="-1"></a>    threshold <span class="op">=</span> torch.kthvalue(importance.flatten(), num_zeros)[<span class="dv">0</span>]</span>
+<span id="cb20-25"><a href="#cb20-25" aria-hidden="true" tabindex="-1"></a>    mask <span class="op">=</span> importance <span class="op">&gt;</span> threshold</span>
+<span id="cb20-26"><a href="#cb20-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-27"><a href="#cb20-27" aria-hidden="true" tabindex="-1"></a>    tensor.mul_(mask)</span>
+<span id="cb20-28"><a href="#cb20-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-29"><a href="#cb20-29" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> mask</span>
+<span id="cb20-30"><a href="#cb20-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-31"><a href="#cb20-31" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> FineGrainedPruner:</span>
+<span id="cb20-32"><a href="#cb20-32" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, model, sparsity_dict):</span>
+<span id="cb20-33"><a href="#cb20-33" aria-hidden="true" tabindex="-1"></a>        <span class="co">"""</span></span>
+<span id="cb20-34"><a href="#cb20-34" aria-hidden="true" tabindex="-1"></a><span class="co">        Initialize the FineGrainedPruner with a model and sparsity dictionary.</span></span>
+<span id="cb20-35"><a href="#cb20-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-36"><a href="#cb20-36" aria-hidden="true" tabindex="-1"></a><span class="co">        :param model: torch.nn.Module, the model to be pruned</span></span>
+<span id="cb20-37"><a href="#cb20-37" aria-hidden="true" tabindex="-1"></a><span class="co">        :param sparsity_dict: dict, keys are parameter names, values are sparsity levels</span></span>
+<span id="cb20-38"><a href="#cb20-38" aria-hidden="true" tabindex="-1"></a><span class="co">        """</span></span>
+<span id="cb20-39"><a href="#cb20-39" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.masks <span class="op">=</span> <span class="va">self</span>._prune(model, sparsity_dict)</span>
+<span id="cb20-40"><a href="#cb20-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-41"><a href="#cb20-41" aria-hidden="true" tabindex="-1"></a>    <span class="at">@torch.no_grad</span>()</span>
+<span id="cb20-42"><a href="#cb20-42" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="bu">apply</span>(<span class="va">self</span>, model):</span>
+<span id="cb20-43"><a href="#cb20-43" aria-hidden="true" tabindex="-1"></a>        <span class="co">"""</span></span>
+<span id="cb20-44"><a href="#cb20-44" aria-hidden="true" tabindex="-1"></a><span class="co">        Apply the computed masks to the model's parameters.</span></span>
+<span id="cb20-45"><a href="#cb20-45" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-46"><a href="#cb20-46" aria-hidden="true" tabindex="-1"></a><span class="co">        :param model: torch.nn.Module, the model to apply masks to</span></span>
+<span id="cb20-47"><a href="#cb20-47" aria-hidden="true" tabindex="-1"></a><span class="co">        """</span></span>
+<span id="cb20-48"><a href="#cb20-48" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> name, param <span class="kw">in</span> model.named_parameters():</span>
+<span id="cb20-49"><a href="#cb20-49" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> name <span class="kw">in</span> <span class="va">self</span>.masks:</span>
+<span id="cb20-50"><a href="#cb20-50" aria-hidden="true" tabindex="-1"></a>                param <span class="op">*=</span> <span class="va">self</span>.masks[name]</span>
+<span id="cb20-51"><a href="#cb20-51" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-52"><a href="#cb20-52" aria-hidden="true" tabindex="-1"></a>    <span class="at">@staticmethod</span></span>
+<span id="cb20-53"><a href="#cb20-53" aria-hidden="true" tabindex="-1"></a>    <span class="at">@torch.no_grad</span>()</span>
+<span id="cb20-54"><a href="#cb20-54" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> _prune(model, sparsity_dict):</span>
+<span id="cb20-55"><a href="#cb20-55" aria-hidden="true" tabindex="-1"></a>        <span class="co">"""</span></span>
+<span id="cb20-56"><a href="#cb20-56" aria-hidden="true" tabindex="-1"></a><span class="co">        Compute masks for pruning based on the sparsity dictionary.</span></span>
+<span id="cb20-57"><a href="#cb20-57" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-58"><a href="#cb20-58" aria-hidden="true" tabindex="-1"></a><span class="co">        :param model: torch.nn.Module, the model to be pruned</span></span>
+<span id="cb20-59"><a href="#cb20-59" aria-hidden="true" tabindex="-1"></a><span class="co">        :param sparsity_dict: dict, keys are parameter names, values are sparsity levels</span></span>
+<span id="cb20-60"><a href="#cb20-60" aria-hidden="true" tabindex="-1"></a><span class="co">        :return: dict, parameter names to their corresponding masks</span></span>
+<span id="cb20-61"><a href="#cb20-61" aria-hidden="true" tabindex="-1"></a><span class="co">        """</span></span>
+<span id="cb20-62"><a href="#cb20-62" aria-hidden="true" tabindex="-1"></a>        masks <span class="op">=</span> <span class="bu">dict</span>()</span>
+<span id="cb20-63"><a href="#cb20-63" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> name, param <span class="kw">in</span> model.named_parameters():</span>
+<span id="cb20-64"><a href="#cb20-64" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> param.dim() <span class="op">&gt;</span> <span class="dv">1</span>:  <span class="co"># we only prune conv and fc weights</span></span>
+<span id="cb20-65"><a href="#cb20-65" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> name <span class="kw">in</span> sparsity_dict:</span>
+<span id="cb20-66"><a href="#cb20-66" aria-hidden="true" tabindex="-1"></a>                    masks[name] <span class="op">=</span> fine_grained_prune(param, sparsity_dict[name])</span>
+<span id="cb20-67"><a href="#cb20-67" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> masks</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>When applying pruning across a model, we still need to determine how much of each tensor should be pruned. However, using a uniform pruning ratio for all tensors might not be the most effective approach. Some tensors are larger or more sensitive than others, meaning that pruning them by the same amount could disproportionately impact the overall model performance. Furthermore, Linear layers have a much higher number of parameters generally in these models in comparison to the Convolution layers.</p>
+<p>To better understand this, we will plot the weight distributions for all convolutional and linear layers, as well as the distribution of the number of parameters across these layers. This will give us a clearer picture of the variation in tensor sizes and importance.</p>
+<p>Next, we’ll conduct a <strong>Sensitivity Search</strong>, where we prune each layer <em>independently</em> and evaluate the model’s performance after each isolated change—without any fine-tuning or calibration. This approach will help us identify which layers are more sensitive to pruning and will provide valuable insights into how to determine the optimal pruning ratios for each layer. This way, we can apply non-uniform pruning ratios that are tailored to the characteristics of each layer, ensuring a more effective and balanced pruning strategy.</p>
+<div id="cell-21" class="cell" data-execution_count="13">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Reference: https://hanlab.mit.edu/courses/2024-fall-65940</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> plot_weight_distribution(model, bins<span class="op">=</span><span class="dv">256</span>, count_nonzero_only<span class="op">=</span><span class="va">False</span>):</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>    fig, axes <span class="op">=</span> plt.subplots(<span class="dv">4</span>, <span class="dv">4</span>, figsize<span class="op">=</span>(<span class="dv">10</span>, <span class="dv">6</span>))</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>    axes <span class="op">=</span> axes.ravel()</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>    plot_index <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> name, module <span class="kw">in</span> model.named_modules():</span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="kw">not</span> <span class="bu">isinstance</span>(module, (nn.Conv2d, nn.Linear)):</span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>            <span class="cf">continue</span></span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>        param <span class="op">=</span> module.weight</span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> param.dim() <span class="op">&gt;</span> <span class="dv">1</span>:</span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a>            ax <span class="op">=</span> axes[plot_index]</span>
+<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> count_nonzero_only:</span>
+<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a>                param_cpu <span class="op">=</span> param.detach().view(<span class="op">-</span><span class="dv">1</span>).cpu()</span>
+<span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a>                param_cpu <span class="op">=</span> param_cpu[param_cpu <span class="op">!=</span> <span class="dv">0</span>].view(<span class="op">-</span><span class="dv">1</span>)</span>
+<span id="cb21-16"><a href="#cb21-16" aria-hidden="true" tabindex="-1"></a>                ax.hist(param_cpu, bins<span class="op">=</span>bins, density<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb21-17"><a href="#cb21-17" aria-hidden="true" tabindex="-1"></a>                        color <span class="op">=</span> <span class="st">'blue'</span>, alpha <span class="op">=</span> <span class="fl">0.5</span>)</span>
+<span id="cb21-18"><a href="#cb21-18" aria-hidden="true" tabindex="-1"></a>            <span class="cf">else</span>:</span>
+<span id="cb21-19"><a href="#cb21-19" aria-hidden="true" tabindex="-1"></a>                ax.hist(param.detach().view(<span class="op">-</span><span class="dv">1</span>).cpu(), bins<span class="op">=</span>bins, density<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb21-20"><a href="#cb21-20" aria-hidden="true" tabindex="-1"></a>                        color <span class="op">=</span> <span class="st">'blue'</span>, alpha <span class="op">=</span> <span class="fl">0.5</span>)</span>
+<span id="cb21-21"><a href="#cb21-21" aria-hidden="true" tabindex="-1"></a>            ax.set_xlabel(name)</span>
+<span id="cb21-22"><a href="#cb21-22" aria-hidden="true" tabindex="-1"></a>            ax.set_ylabel(<span class="st">'density'</span>)</span>
+<span id="cb21-23"><a href="#cb21-23" aria-hidden="true" tabindex="-1"></a>            plot_index <span class="op">+=</span> <span class="dv">1</span></span>
+<span id="cb21-24"><a href="#cb21-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-25"><a href="#cb21-25" aria-hidden="true" tabindex="-1"></a>    fig.suptitle(<span class="st">'Histogram of Weights'</span>)</span>
+<span id="cb21-26"><a href="#cb21-26" aria-hidden="true" tabindex="-1"></a>    fig.tight_layout()</span>
+<span id="cb21-27"><a href="#cb21-27" aria-hidden="true" tabindex="-1"></a>    fig.subplots_adjust(top<span class="op">=</span><span class="fl">0.925</span>)</span>
+<span id="cb21-28"><a href="#cb21-28" aria-hidden="true" tabindex="-1"></a>    plt.show()</span>
+<span id="cb21-29"><a href="#cb21-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-30"><a href="#cb21-30" aria-hidden="true" tabindex="-1"></a>plot_weight_distribution(model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="index_files/figure-html/cell-14-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<div id="cell-22" class="cell" data-execution_count="14">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Reference: https://hanlab.mit.edu/courses/2024-fall-65940</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> plot_num_parameters_distribution(model):</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>    num_parameters <span class="op">=</span> <span class="bu">dict</span>()</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> name, module <span class="kw">in</span> model.named_modules():</span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="kw">not</span> <span class="bu">isinstance</span>(module, (nn.Conv2d, nn.Linear)):</span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>            <span class="cf">continue</span></span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>        param <span class="op">=</span> module.weight</span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> param.dim() <span class="op">&gt;</span> <span class="dv">1</span>:</span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a>            num_parameters[name] <span class="op">=</span> param.numel()</span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a>    fig <span class="op">=</span> plt.figure(figsize<span class="op">=</span>(<span class="dv">8</span>, <span class="dv">6</span>))</span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a>    plt.grid(axis<span class="op">=</span><span class="st">'y'</span>)</span>
+<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a>    plt.bar(<span class="bu">list</span>(num_parameters.keys()), <span class="bu">list</span>(num_parameters.values()))</span>
+<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a>    plt.title(<span class="st">'#Parameter Distribution'</span>)</span>
+<span id="cb22-14"><a href="#cb22-14" aria-hidden="true" tabindex="-1"></a>    plt.ylabel(<span class="st">'Number of Parameters'</span>)</span>
+<span id="cb22-15"><a href="#cb22-15" aria-hidden="true" tabindex="-1"></a>    plt.xticks(rotation<span class="op">=</span><span class="dv">90</span>)</span>
+<span id="cb22-16"><a href="#cb22-16" aria-hidden="true" tabindex="-1"></a>    plt.tight_layout()</span>
+<span id="cb22-17"><a href="#cb22-17" aria-hidden="true" tabindex="-1"></a>    plt.show()</span>
+<span id="cb22-18"><a href="#cb22-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-19"><a href="#cb22-19" aria-hidden="true" tabindex="-1"></a>plot_num_parameters_distribution(model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="index_files/figure-html/cell-15-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<div id="cell-23" class="cell" data-execution_count="15">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Reference: https://hanlab.mit.edu/courses/2024-fall-65940</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="at">@torch.no_grad</span>()</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> sensitivity_scan(model, dataloader, scan_step<span class="op">=</span><span class="fl">0.1</span>, scan_start<span class="op">=</span><span class="fl">0.4</span>, scan_end<span class="op">=</span><span class="fl">1.0</span>, verbose<span class="op">=</span><span class="va">True</span>):</span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>    sparsities <span class="op">=</span> np.arange(start<span class="op">=</span>scan_start, stop<span class="op">=</span>scan_end, step<span class="op">=</span>scan_step)</span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>    accuracies <span class="op">=</span> []</span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>    named_conv_weights <span class="op">=</span> [(name, param) <span class="cf">for</span> (name, param) <span class="op">\</span></span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>                          <span class="kw">in</span> model.named_parameters() <span class="cf">if</span> param.dim() <span class="op">&gt;</span> <span class="dv">1</span>]</span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i_layer, (name, param) <span class="kw">in</span> <span class="bu">enumerate</span>(named_conv_weights):</span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a>        param_clone <span class="op">=</span> param.detach().clone()</span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a>        accuracy <span class="op">=</span> []</span>
+<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> sparsity <span class="kw">in</span> tqdm(sparsities, desc<span class="op">=</span><span class="ss">f'scanning </span><span class="sc">{</span>i_layer<span class="sc">}</span><span class="ss">/</span><span class="sc">{</span><span class="bu">len</span>(named_conv_weights)<span class="sc">}</span><span class="ss"> weight - </span><span class="sc">{</span>name<span class="sc">}</span><span class="ss">'</span>):</span>
+<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a>            fine_grained_prune(param.detach(), sparsity<span class="op">=</span>sparsity)</span>
+<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a>            _, acc <span class="op">=</span> eval_step(model, dataloader, criterion, device)</span>
+<span id="cb23-14"><a href="#cb23-14" aria-hidden="true" tabindex="-1"></a>            <span class="co"># restore</span></span>
+<span id="cb23-15"><a href="#cb23-15" aria-hidden="true" tabindex="-1"></a>            param.copy_(param_clone)</span>
+<span id="cb23-16"><a href="#cb23-16" aria-hidden="true" tabindex="-1"></a>            accuracy.append(acc)</span>
+<span id="cb23-17"><a href="#cb23-17" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> verbose:</span>
+<span id="cb23-18"><a href="#cb23-18" aria-hidden="true" tabindex="-1"></a>            <span class="bu">print</span>(<span class="ss">f'</span><span class="ch">\r</span><span class="ss">    sparsity=[</span><span class="sc">{</span><span class="st">","</span><span class="sc">.</span>join([<span class="st">"</span><span class="sc">{:.2f}</span><span class="st">"</span>.<span class="bu">format</span>(x) <span class="cf">for</span> x <span class="kw">in</span> sparsities])<span class="sc">}</span><span class="ss">]: accuracy=[</span><span class="sc">{</span><span class="st">", "</span><span class="sc">.</span>join([<span class="st">"</span><span class="sc">{:.2f}</span><span class="st">"</span>.<span class="bu">format</span>(x) <span class="cf">for</span> x <span class="kw">in</span> accuracy])<span class="sc">}</span><span class="ss">]'</span>, end<span class="op">=</span><span class="st">''</span>)</span>
+<span id="cb23-19"><a href="#cb23-19" aria-hidden="true" tabindex="-1"></a>        accuracies.append(accuracy)</span>
+<span id="cb23-20"><a href="#cb23-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> sparsities, accuracies</span>
+<span id="cb23-21"><a href="#cb23-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-22"><a href="#cb23-22" aria-hidden="true" tabindex="-1"></a>sparsities, accuracies <span class="op">=</span> sensitivity_scan(</span>
+<span id="cb23-23"><a href="#cb23-23" aria-hidden="true" tabindex="-1"></a>    model, test_dl, scan_step<span class="op">=</span><span class="fl">0.1</span>, scan_start<span class="op">=</span><span class="fl">0.4</span>, scan_end<span class="op">=</span><span class="fl">1.0</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>scanning 0/16 weight - features.0.weight: 100%|██████████| 6/6 [01:29&lt;00:00, 14.94s/it]
+scanning 1/16 weight - features.2.weight: 100%|██████████| 6/6 [01:28&lt;00:00, 14.83s/it]
+scanning 2/16 weight - features.5.weight: 100%|██████████| 6/6 [01:29&lt;00:00, 14.91s/it]
+scanning 3/16 weight - features.7.weight: 100%|██████████| 6/6 [01:29&lt;00:00, 14.95s/it]
+scanning 4/16 weight - features.10.weight: 100%|██████████| 6/6 [01:29&lt;00:00, 14.84s/it]
+scanning 5/16 weight - features.12.weight: 100%|██████████| 6/6 [01:26&lt;00:00, 14.45s/it]
+scanning 6/16 weight - features.14.weight: 100%|██████████| 6/6 [01:31&lt;00:00, 15.20s/it]
+scanning 7/16 weight - features.17.weight: 100%|██████████| 6/6 [01:28&lt;00:00, 14.79s/it]
+scanning 8/16 weight - features.19.weight: 100%|██████████| 6/6 [01:27&lt;00:00, 14.52s/it]
+scanning 9/16 weight - features.21.weight: 100%|██████████| 6/6 [01:27&lt;00:00, 14.62s/it]
+scanning 10/16 weight - features.24.weight: 100%|██████████| 6/6 [01:27&lt;00:00, 14.52s/it]
+scanning 11/16 weight - features.26.weight: 100%|██████████| 6/6 [01:25&lt;00:00, 14.21s/it]
+scanning 12/16 weight - features.28.weight: 100%|██████████| 6/6 [01:30&lt;00:00, 15.10s/it]
+scanning 13/16 weight - classifier.0.weight: 100%|██████████| 6/6 [01:32&lt;00:00, 15.40s/it]
+scanning 14/16 weight - classifier.3.weight: 100%|██████████| 6/6 [01:31&lt;00:00, 15.28s/it]
+scanning 15/16 weight - classifier.6.weight: 100%|██████████| 6/6 [01:28&lt;00:00, 14.67s/it]</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>    sparsity=[0.40,0.50,0.60,0.70,0.80,0.90]: accuracy=[0.88, 0.86, 0.79, 0.64, 0.48, 0.26]    sparsity=[0.40,0.50,0.60,0.70,0.80,0.90]: accuracy=[0.90, 0.90, 0.90, 0.89, 0.88, 0.85]    sparsity=[0.40,0.50,0.60,0.70,0.80,0.90]: accuracy=[0.90, 0.90, 0.90, 0.89, 0.89, 0.84]    sparsity=[0.40,0.50,0.60,0.70,0.80,0.90]: accuracy=[0.90, 0.90, 0.90, 0.89, 0.87, 0.76]    sparsity=[0.40,0.50,0.60,0.70,0.80,0.90]: accuracy=[0.90, 0.90, 0.90, 0.90, 0.88, 0.83]    sparsity=[0.40,0.50,0.60,0.70,0.80,0.90]: accuracy=[0.90, 0.90, 0.90, 0.89, 0.88, 0.84]    sparsity=[0.40,0.50,0.60,0.70,0.80,0.90]: accuracy=[0.90, 0.90, 0.89, 0.89, 0.85, 0.66]    sparsity=[0.40,0.50,0.60,0.70,0.80,0.90]: accuracy=[0.90, 0.90, 0.90, 0.89, 0.87, 0.75]    sparsity=[0.40,0.50,0.60,0.70,0.80,0.90]: accuracy=[0.90, 0.90, 0.90, 0.89, 0.88, 0.80]    sparsity=[0.40,0.50,0.60,0.70,0.80,0.90]: accuracy=[0.90, 0.90, 0.90, 0.89, 0.88, 0.82]    sparsity=[0.40,0.50,0.60,0.70,0.80,0.90]: accuracy=[0.90, 0.90, 0.90, 0.90, 0.89, 0.84]    sparsity=[0.40,0.50,0.60,0.70,0.80,0.90]: accuracy=[0.90, 0.90, 0.90, 0.89, 0.88, 0.85]    sparsity=[0.40,0.50,0.60,0.70,0.80,0.90]: accuracy=[0.90, 0.90, 0.90, 0.89, 0.88, 0.82]    sparsity=[0.40,0.50,0.60,0.70,0.80,0.90]: accuracy=[0.90, 0.90, 0.90, 0.90, 0.90, 0.90]    sparsity=[0.40,0.50,0.60,0.70,0.80,0.90]: accuracy=[0.90, 0.90, 0.90, 0.90, 0.90, 0.90]    sparsity=[0.40,0.50,0.60,0.70,0.80,0.90]: accuracy=[0.90, 0.90, 0.89, 0.89, 0.89, 0.86]</code></pre>
+</div>
+</div>
+<div id="cell-24" class="cell" data-execution_count="16">
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Reference: https://hanlab.mit.edu/courses/2024-fall-65940</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> plot_sensitivity_scan(sparsities, accuracies, dense_model_accuracy):</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""</span></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a><span class="co">    Plot sensitivity curves for model pruning.</span></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a><span class="co">    :param sparsities: List or array of pruning sparsities.</span></span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a><span class="co">    :param accuracies: List or array of accuracies corresponding to each sparsity.</span></span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a><span class="co">    :param dense_model_accuracy: Accuracy of the model without pruning.</span></span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a><span class="co">    """</span></span>
+<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Normalize dense model accuracy to the range of 0 to 1 if it's not already</span></span>
+<span id="cb26-11"><a href="#cb26-11" aria-hidden="true" tabindex="-1"></a>    dense_model_accuracy <span class="op">=</span> <span class="bu">min</span>(<span class="bu">max</span>(dense_model_accuracy, <span class="fl">0.0</span>), <span class="fl">1.0</span>)</span>
+<span id="cb26-12"><a href="#cb26-12" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb26-13"><a href="#cb26-13" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Calculate lower bound accuracy for plotting reference line</span></span>
+<span id="cb26-14"><a href="#cb26-14" aria-hidden="true" tabindex="-1"></a>    lower_bound_accuracy <span class="op">=</span> <span class="dv">1</span> <span class="op">-</span> (<span class="dv">1</span> <span class="op">-</span> dense_model_accuracy) <span class="op">*</span> <span class="fl">1.5</span></span>
+<span id="cb26-15"><a href="#cb26-15" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb26-16"><a href="#cb26-16" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Ensure lower_bound_accuracy is within [0, 1]</span></span>
+<span id="cb26-17"><a href="#cb26-17" aria-hidden="true" tabindex="-1"></a>    lower_bound_accuracy <span class="op">=</span> <span class="bu">min</span>(<span class="bu">max</span>(lower_bound_accuracy, <span class="fl">0.0</span>), <span class="fl">1.0</span>)</span>
+<span id="cb26-18"><a href="#cb26-18" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb26-19"><a href="#cb26-19" aria-hidden="true" tabindex="-1"></a>    fig, axes <span class="op">=</span> plt.subplots(<span class="dv">4</span>, <span class="dv">4</span>, figsize<span class="op">=</span>(<span class="dv">15</span>, <span class="dv">12</span>))</span>
+<span id="cb26-20"><a href="#cb26-20" aria-hidden="true" tabindex="-1"></a>    axes <span class="op">=</span> axes.ravel()</span>
+<span id="cb26-21"><a href="#cb26-21" aria-hidden="true" tabindex="-1"></a>    plot_index <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb26-22"><a href="#cb26-22" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb26-23"><a href="#cb26-23" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> name, param <span class="kw">in</span> model.named_parameters():</span>
+<span id="cb26-24"><a href="#cb26-24" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> param.dim() <span class="op">&gt;</span> <span class="dv">1</span>:</span>
+<span id="cb26-25"><a href="#cb26-25" aria-hidden="true" tabindex="-1"></a>            ax <span class="op">=</span> axes[plot_index]</span>
+<span id="cb26-26"><a href="#cb26-26" aria-hidden="true" tabindex="-1"></a>            </span>
+<span id="cb26-27"><a href="#cb26-27" aria-hidden="true" tabindex="-1"></a>            <span class="co"># Plot accuracy vs sparsity curve</span></span>
+<span id="cb26-28"><a href="#cb26-28" aria-hidden="true" tabindex="-1"></a>            curve <span class="op">=</span> ax.plot(sparsities, accuracies[plot_index], label<span class="op">=</span><span class="st">'Accuracy after pruning'</span>)</span>
+<span id="cb26-29"><a href="#cb26-29" aria-hidden="true" tabindex="-1"></a>            </span>
+<span id="cb26-30"><a href="#cb26-30" aria-hidden="true" tabindex="-1"></a>            <span class="co"># Plot lower bound accuracy line</span></span>
+<span id="cb26-31"><a href="#cb26-31" aria-hidden="true" tabindex="-1"></a>            line <span class="op">=</span> ax.plot(sparsities, [lower_bound_accuracy] <span class="op">*</span> <span class="bu">len</span>(sparsities), <span class="st">'--'</span>, color<span class="op">=</span><span class="st">'red'</span>, </span>
+<span id="cb26-32"><a href="#cb26-32" aria-hidden="true" tabindex="-1"></a>                           label<span class="op">=</span><span class="ss">f'</span><span class="sc">{</span>lower_bound_accuracy <span class="op">/</span> dense_model_accuracy <span class="op">*</span> <span class="dv">100</span><span class="sc">:.0f}</span><span class="ss">% of dense model accuracy'</span>)</span>
+<span id="cb26-33"><a href="#cb26-33" aria-hidden="true" tabindex="-1"></a>            </span>
+<span id="cb26-34"><a href="#cb26-34" aria-hidden="true" tabindex="-1"></a>            <span class="co"># Set x and y axis labels and limits</span></span>
+<span id="cb26-35"><a href="#cb26-35" aria-hidden="true" tabindex="-1"></a>            ax.set_xticks(np.arange(start<span class="op">=</span><span class="fl">0.4</span>, stop<span class="op">=</span><span class="fl">1.0</span>, step<span class="op">=</span><span class="fl">0.1</span>))</span>
+<span id="cb26-36"><a href="#cb26-36" aria-hidden="true" tabindex="-1"></a>            ax.set_ylim(<span class="dv">0</span>, <span class="dv">1</span>)  <span class="co"># Set y-axis limits to be between 0 and 1</span></span>
+<span id="cb26-37"><a href="#cb26-37" aria-hidden="true" tabindex="-1"></a>            </span>
+<span id="cb26-38"><a href="#cb26-38" aria-hidden="true" tabindex="-1"></a>            <span class="co"># Set title and labels</span></span>
+<span id="cb26-39"><a href="#cb26-39" aria-hidden="true" tabindex="-1"></a>            ax.set_title(name)</span>
+<span id="cb26-40"><a href="#cb26-40" aria-hidden="true" tabindex="-1"></a>            ax.set_xlabel(<span class="st">'Pruning Ratio'</span>)</span>
+<span id="cb26-41"><a href="#cb26-41" aria-hidden="true" tabindex="-1"></a>            ax.set_ylabel(<span class="st">'Accuracy'</span>)</span>
+<span id="cb26-42"><a href="#cb26-42" aria-hidden="true" tabindex="-1"></a>            </span>
+<span id="cb26-43"><a href="#cb26-43" aria-hidden="true" tabindex="-1"></a>            <span class="co"># Add legend and grid</span></span>
+<span id="cb26-44"><a href="#cb26-44" aria-hidden="true" tabindex="-1"></a>            ax.legend()</span>
+<span id="cb26-45"><a href="#cb26-45" aria-hidden="true" tabindex="-1"></a>            ax.grid(axis<span class="op">=</span><span class="st">'x'</span>)</span>
+<span id="cb26-46"><a href="#cb26-46" aria-hidden="true" tabindex="-1"></a>            </span>
+<span id="cb26-47"><a href="#cb26-47" aria-hidden="true" tabindex="-1"></a>            plot_index <span class="op">+=</span> <span class="dv">1</span></span>
+<span id="cb26-48"><a href="#cb26-48" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb26-49"><a href="#cb26-49" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Adjust layout and title</span></span>
+<span id="cb26-50"><a href="#cb26-50" aria-hidden="true" tabindex="-1"></a>    fig.suptitle(<span class="st">'Sensitivity Curves: Validation Accuracy vs. Pruning Sparsity'</span>)</span>
+<span id="cb26-51"><a href="#cb26-51" aria-hidden="true" tabindex="-1"></a>    fig.tight_layout()</span>
+<span id="cb26-52"><a href="#cb26-52" aria-hidden="true" tabindex="-1"></a>    fig.subplots_adjust(top<span class="op">=</span><span class="fl">0.925</span>)</span>
+<span id="cb26-53"><a href="#cb26-53" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb26-54"><a href="#cb26-54" aria-hidden="true" tabindex="-1"></a>    plt.show()</span>
+<span id="cb26-55"><a href="#cb26-55" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-56"><a href="#cb26-56" aria-hidden="true" tabindex="-1"></a>plot_sensitivity_scan(sparsities, accuracies, val_acc)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="index_files/figure-html/cell-17-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>After plotting the sensitivity curves and analyzing the distribution of parameters, we can use this information to decide how much to prune each layer. The sensitivity plots show how the model’s performance changes as we increase the pruning ratio for each layer. Layers with more parameters and less sensitivity—where the performance curves show smaller dips as pruning increases—are typically more forgiving. This suggests that we can prune these layers more aggressively without significantly impacting the overall model performance.</p>
+<p>Our goal is to prune as much as possible while maintaining the model’s effectiveness. By focusing on layers with a high parameter count and low sensitivity, we can maximize the reduction in model complexity with minimal performance loss. This approach ensures that we optimize the pruning process, trimming away unnecessary components while preserving the key features that contribute to the model’s success.</p>
+<div id="cell-26" class="cell" data-execution_count="17">
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Reference: https://hanlab.mit.edu/courses/2024-fall-65940</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>sparsity_dict <span class="op">=</span> {</span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">'features.0.weight'</span>: <span class="dv">0</span>, <span class="co"># very sensitive</span></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">'features.2.weight'</span>: <span class="fl">0.7</span>, <span class="co"># not sensitive</span></span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">'features.5.weight'</span>: <span class="fl">0.7</span>,</span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">'features.7.weight'</span>: <span class="fl">0.7</span>,</span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">'features.10.weight'</span>: <span class="fl">0.7</span>,</span>
+<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">'features.12.weight'</span>: <span class="fl">0.7</span>,</span>
+<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">'features.14.weight'</span>: <span class="fl">0.6</span>, <span class="co"># little more sensitive</span></span>
+<span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a>    <span class="st">'features.17.weight'</span>: <span class="fl">0.6</span>,</span>
+<span id="cb27-13"><a href="#cb27-13" aria-hidden="true" tabindex="-1"></a>    <span class="st">'features.19.weight'</span>: <span class="fl">0.6</span>,</span>
+<span id="cb27-14"><a href="#cb27-14" aria-hidden="true" tabindex="-1"></a>    <span class="st">'features.21.weight'</span>: <span class="fl">0.6</span>,</span>
+<span id="cb27-15"><a href="#cb27-15" aria-hidden="true" tabindex="-1"></a>    <span class="st">'features.24.weight'</span>: <span class="fl">0.6</span>,</span>
+<span id="cb27-16"><a href="#cb27-16" aria-hidden="true" tabindex="-1"></a>    <span class="st">'features.26.weight'</span>: <span class="fl">0.6</span>,</span>
+<span id="cb27-17"><a href="#cb27-17" aria-hidden="true" tabindex="-1"></a>    <span class="st">'features.28.weight'</span>: <span class="fl">0.6</span>,</span>
+<span id="cb27-18"><a href="#cb27-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-19"><a href="#cb27-19" aria-hidden="true" tabindex="-1"></a>    <span class="st">'classifier.0.weight'</span>: <span class="fl">0.8</span>, <span class="co"># not sensitive and has TOO many params</span></span>
+<span id="cb27-20"><a href="#cb27-20" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb27-21"><a href="#cb27-21" aria-hidden="true" tabindex="-1"></a>    <span class="st">'classifier.3.weight'</span>: <span class="fl">0.6</span>, <span class="co"># not sensitive and has a good chunk of params</span></span>
+<span id="cb27-22"><a href="#cb27-22" aria-hidden="true" tabindex="-1"></a>    <span class="st">'classifier.6.weight'</span>: <span class="fl">0.6</span></span>
+<span id="cb27-23"><a href="#cb27-23" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb27-24"><a href="#cb27-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-25"><a href="#cb27-25" aria-hidden="true" tabindex="-1"></a>get_sparsity <span class="op">=</span> <span class="kw">lambda</span> tensor: <span class="dv">1</span> <span class="op">-</span> <span class="bu">float</span>(tensor.count_nonzero()) <span class="op">/</span> tensor.numel()</span>
+<span id="cb27-26"><a href="#cb27-26" aria-hidden="true" tabindex="-1"></a>pruner <span class="op">=</span> FineGrainedPruner(model, sparsity_dict)</span>
+<span id="cb27-27"><a href="#cb27-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-28"><a href="#cb27-28" aria-hidden="true" tabindex="-1"></a>sparse_model_size <span class="op">=</span> get_model_size(model, count_nonzero_only<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb27-29"><a href="#cb27-29" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Sparse model size: </span><span class="sc">{</span>sparse_model_size <span class="op">/</span> (<span class="dv">8</span> <span class="op">*</span> <span class="dv">1024</span><span class="op">**</span><span class="dv">2</span>)<span class="sc">:.2f}</span><span class="ss"> MiB = </span><span class="sc">{</span>sparse_model_size <span class="op">/</span> orig_model_size <span class="op">*</span> <span class="dv">100</span><span class="sc">:.2f}</span><span class="ss">% of dense model size"</span>)</span>
+<span id="cb27-30"><a href="#cb27-30" aria-hidden="true" tabindex="-1"></a>_, sparse_model_accuracy <span class="op">=</span> eval_step(model, test_dl, criterion, device)</span>
+<span id="cb27-31"><a href="#cb27-31" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Sparse model Accuracy: </span><span class="sc">{</span>sparse_model_accuracy<span class="sc">:.2f}</span><span class="ss"> (before finetuning)"</span>)</span>
+<span id="cb27-32"><a href="#cb27-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-33"><a href="#cb27-33" aria-hidden="true" tabindex="-1"></a>plot_weight_distribution(model, count_nonzero_only<span class="op">=</span><span class="va">True</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Sparse model size: 132.32 MiB = 25.07% of dense model size
+Sparse model Accuracy: 0.84 (before finetuning)</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                             </code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="index_files/figure-html/cell-18-output-3.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>After pruning, our results show that we successfully reduced the model size by nearly 75%, with only a 6% drop in accuracy. While this is an impressive reduction, we don’t have to stop here.</p>
+<p>It’s a common practice to fine-tune the model post-pruning to recover some of the lost performance. This makes sense—suddenly forcing a smaller portion of the model to handle the full inference task can be overwhelming, so giving the model a chance to recalibrate itself is essential.</p>
+<p>We will fine-tune the model for an additional three epochs, ensuring that pruning is reapplied after each step. This reinforcement is necessary because gradient descent during fine-tuning might adjust the previously pruned weights back to non-zero values. By consistently applying the pruning mask, we ensure that the model remains in its pruned state, allowing it to adapt to its new, more compact structure while regaining some of the lost performance.</p>
+<div id="cell-28" class="cell" data-execution_count="18">
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> epoch <span class="kw">in</span> tqdm(<span class="bu">range</span>(epochs), desc<span class="op">=</span><span class="st">"Epochs"</span>):</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>    train_loss, train_acc <span class="op">=</span> train_step(model, train_dl, criterion, optimizer, device)</span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>    val_loss, val_acc <span class="op">=</span> eval_step(model, test_dl, criterion, device)</span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"Epoch </span><span class="sc">{</span>epoch<span class="op">+</span><span class="dv">1</span><span class="sc">}</span><span class="ss">... Train Accuracy: </span><span class="sc">{</span>train_acc<span class="sc">:.2f}</span><span class="ss"> | Validation Accuracy: </span><span class="sc">{</span>val_acc<span class="sc">:.2f}</span><span class="ss">"</span>)</span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>    pruner.<span class="bu">apply</span>(model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Epochs:  33%|███▎      | 1/3 [03:09&lt;06:19, 189.78s/it]Epochs:  67%|██████▋   | 2/3 [06:20&lt;03:10, 190.46s/it]Epochs: 100%|██████████| 3/3 [09:32&lt;00:00, 190.82s/it]</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Epoch 1... Train Accuracy: 0.94 | Validation Accuracy: 0.89
+Epoch 2... Train Accuracy: 0.95 | Validation Accuracy: 0.91
+Epoch 3... Train Accuracy: 0.96 | Validation Accuracy: 0.91</code></pre>
+</div>
+</div>
+<div id="cell-29" class="cell" data-execution_count="19">
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>sparse_model_size <span class="op">=</span> get_model_size(model, count_nonzero_only<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Sparse model size: </span><span class="sc">{</span>sparse_model_size <span class="op">/</span> (<span class="dv">8</span> <span class="op">*</span> <span class="dv">1024</span><span class="op">**</span><span class="dv">2</span>)<span class="sc">:.2f}</span><span class="ss"> MiB = </span><span class="sc">{</span>sparse_model_size <span class="op">/</span> orig_model_size <span class="op">*</span> <span class="dv">100</span><span class="sc">:.2f}</span><span class="ss">% of dense model size"</span>)</span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>_, sparse_model_accuracy <span class="op">=</span> eval_step(model, test_dl, criterion, device)</span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Sparse model Accuracy: </span><span class="sc">{</span>sparse_model_accuracy<span class="sc">:.2f}</span><span class="ss"> (after finetuning)"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Sparse model size: 132.32 MiB = 25.07% of dense model size
+Sparse model Accuracy: 0.93 (after finetuning)</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>                                                             </code></pre>
+</div>
+</div>
+<p>In conclusion, fine-grained pruning has enabled us to significantly reduce the number of effective parameters in our model, cutting down the model size by a substantial amount. The subsequent fine-tuning not only recovered much of the lost performance but actually improved the model’s accuracy beyond its initial level. This results in a more efficient model that occupies only a quarter of the original storage cost.</p>
+<p>Despite these gains, it’s important to consider whether the time spent on fine-tuning, which remained the same as before, justifies the pruning. While fine-grained pruning can be highly effective, it also comes with its challenges. Zeroing out individual connections in the network is primarily beneficial with specialized hardware designed to handle sparse matrices efficiently. Without such hardware, the computational and memory overhead of working with sparsely populated tensors can offset some of the benefits of pruning.</p>
+<p>In contrast, channel-wise pruning offers a more regular approach by removing entire channels or layers from the network. This method involves explicitly slicing out chunks of the parameter tensors, resulting in a model where the pruned parts are completely removed rather than simply zeroed out. This approach is often easier to implement and can be more compatible with standard hardware, making it a practical alternative to fine-grained pruning.</p>
+<p>We will explore this in a future blog.</p>
+
+
+
+</section>
+</section>
+
+<div id="quarto-appendix" class="default"><section class="quarto-appendix-contents" role="doc-bibliography" id="quarto-bibliography"><h2 class="anchored quarto-appendix-heading">References</h2><div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list">
+<div id="ref-han2015learningweightsconnectionsefficient" class="csl-entry" role="listitem">
+Han, Song, Jeff Pool, John Tran, and William J. Dally. 2015. <span>“Learning Both Weights and Connections for Efficient Neural Networks.”</span> <a href="https://arxiv.org/abs/1506.02626">https://arxiv.org/abs/1506.02626</a>.
+</div>
+<div id="ref-NIPS1989_6c9882bb" class="csl-entry" role="listitem">
+LeCun, Yann, John Denker, and Sara Solla. 1989. <span>“Optimal Brain Damage.”</span> In <em>Advances in Neural Information Processing Systems</em>, edited by D. Touretzky. Vol. 2. Morgan-Kaufmann. <a href="https://proceedings.neurips.cc/paper_files/paper/1989/file/6c9882bbac1c7093bd25041881277658-Paper.pdf">https://proceedings.neurips.cc/paper_files/paper/1989/file/6c9882bbac1c7093bd25041881277658-Paper.pdf</a>.
+</div>
+</div></section></div></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

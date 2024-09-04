@@ -1,6 +1,6 @@
 ---
-title: Welcome to my Blog
-subtitle: Inspired by what I wished I had when learning, I aim to demystify concepts and explore the fascinating world of Machine Learning.
+title: Blog
+subtitle: I write stuff on things I find neat.
 listing:
   sort: "date desc"
   contents: "posts"
