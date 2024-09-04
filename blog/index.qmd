@@ -6,7 +6,8 @@ listing:
   contents: "posts"
   sort-ui: false
   filter-ui: false
-  categories: true
+  categories: false
   feed: true
+  fields: [date, description, title, author, reading-time]
 page-layout: full
 ---

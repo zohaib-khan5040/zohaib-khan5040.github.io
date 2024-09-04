@@ -7,6 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="dcterms.date" content="2024-08-15">
+<meta name="description" content="Exploring structured pruning with CNNs.">
 
 <title>Zohaib Khan - An Introduction to Pruning (Part 2)</title>
 <style>
@@ -209,7 +210,12 @@ window.Quarto = {
   <div class="quarto-title-banner page-columns page-full">
     <div class="quarto-title column-body">
       <h1 class="title">An Introduction to Pruning (Part 2)</h1>
-                      </div>
+                  <div>
+        <div class="description">
+          Exploring structured pruning with CNNs.
+        </div>
+      </div>
+                </div>
   </div>
     
   
@@ -238,8 +244,8 @@ window.Quarto = {
 
 
 
-<section id="an-introduction-to-pruning-with-cnns" class="level1">
-<h1>An Introduction to Pruning with CNNs</h1>
+<section id="structured-pruning-with-cnns" class="level1">
+<h1>Structured Pruning with CNNs</h1>
 <p>In the previous part of this blog series, we covered the basics of pruning, specifically fine-grained pruning. If you haven’t had a chance to read it yet, I encourage you to check out that notebook to familiarize yourself with the foundational concepts and understanding the motivation behind what we will do now.</p>
 <p>In this section, we will review the different types of pruning methods, focusing particularly on channel-wise pruning. Pruning can range from fine-grained approaches, where individual connections are zeroed out based on their importance, to more structured forms like channel-wise pruning. Channel-wise pruning is a more regular method that involves removing entire channels or layers from the network.</p>
 <p>Similar to fine-grained pruning, we will use magnitudes as a heuristic measure of importance to guide our pruning decisions. However, the key advantage of channel-wise pruning over fine-grained approaches is its structure. By removing entire channels, we achieve a more organized pruning process, which doesn’t rely heavily on specialized hardware for efficient computation. This is because channel-wise pruning involves explicitly slicing out chunks of the parameter tensors, making it more straightforward and potentially more compatible with standard hardware.</p>

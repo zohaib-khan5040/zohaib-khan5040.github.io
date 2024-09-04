@@ -11,7 +11,7 @@
     "href": "blog/index.html",
     "title": "Blog",
     "section": "",
-    "text": "An Introduction to Pruning (Part 2)\n\n\n\n\n\n\n\n\n\n\n\nAug 15, 2024\n\n\n\n\n\n\n\n\n\n\n\n\nAn Introduction to Pruning (Part 1)\n\n\n\n\n\n\n\n\n\n\n\nAug 3, 2024\n\n\n\n\n\n\n\n\n\n\n\n\nImplementing a Vision Transformer from Scratch\n\n\n\n\n\n\n\n\n\n\n\nJun 13, 2024\n\n\n\n\n\n\nNo matching items"
+    "text": "An Introduction to Pruning (Part 2)\n\n\n\n\n\nExploring structured pruning with CNNs.\n\n\n\n\n\nAug 15, 2024\n\n\n7 min\n\n\n\n\n\n\n\nAn Introduction to Pruning (Part 1)\n\n\n\n\n\nIntroducing pruning, and implementing fine-grained pruning for CNNs.\n\n\n\n\n\nAug 3, 2024\n\n\n11 min\n\n\n\n\n\n\n\nImplementing a Vision Transformer from Scratch\n\n\n\n\n\nLet’s implement a Vision Transformer from scratch, load in pretrained weights, and fine-tune it.\n\n\n\n\n\nJun 13, 2024\n\n\n18 min\n\n\n\n\n\n\nNo matching items"
   },
   {
     "objectID": "blog/posts/2024-06-13-vision-transformer/index.html",
