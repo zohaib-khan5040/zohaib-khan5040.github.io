@@ -12,8 +12,6 @@ website:
       - icon: github
         href: https://github.com/zohaib-khan5040
     left:
-      - text: "About"
-        href: about.qmd
       - text: "Blog"
         href: blog/index.qmd
       - text: "CV"
