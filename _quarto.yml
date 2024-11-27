@@ -11,6 +11,8 @@ website:
         href: https://www.linkedin.com/in/zohaib-khan-5a76611a6/
       - icon: github
         href: https://github.com/zohaib-khan5040
+      - icon: mortarboard
+        href: https://scholar.google.com/citations?user=Z-mb0_0AAAAJ&hl=en
     left:
       - text: "Blog"
         href: blog/index.qmd
