@@ -14,8 +14,8 @@ about:
       text: Google Scholar
       href: https://scholar.google.com/citations?user=Z-mb0_0AAAAJ&hl=en
     - icon: book
-      text: CV
-      href: files/cv.pdf
+      text: Resume
+      href: files/Resume.pdf
 
 ---
 
@@ -35,10 +35,12 @@ Some of my interests include:
 
 - **Interpretability**: Mechanistic Interpretability, Causal Learning, Similarity of Representations, Neural Network Circuits
 
-You can find more details about my projects, relevant experiences (industry, research, and teaching), and activities outside academia in my [CV](files/cv.pdf).
+You can find more details about my projects, relevant experiences (industry, research, and teaching), and activities outside academia in my [Resume](files/Resume.pdf).
 
 # Experience
 
+- Research Collaborator - Stealth (August 2024 -- Present)
+- Research Collaborator - Fatima Fellowship (August 2024 -- Present)
 - Research Assistant - CITY at LUMS (August 2024 -- Present)
 - Research Intern/Assistant - CSaLT at LUMS (Spring 2022 -- Present)
 - Machine Learning Engineer - ISSM.ai (Summer 2023)
