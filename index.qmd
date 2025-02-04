@@ -21,40 +21,44 @@ about:
 
 # About Me
 
-I'm a Research Associate at the Lahore University of Management Sciences.
+I'm currently working as a Research Associate, collaborating on projects at the Lahore University of Management Sciences, under the Fatima Fellowship, and at a stealth startup.
 
 My goal is to democratize Machine Learning systems, making them more efficient, generalizable, and robust to scenarios that they weren't explicitly trained for.
 
-Some of my interests include:
+Broadly, I'm interested in Efficient Machine Learning (particularly Knowledge Distillation and Parameter-Efficient Finetuning), Safety Alignment, and Domain Generalization. 
 
-- **Efficient ML**: Knowledge Distillation, Neural Network Pruning, Parameter-Efficient Finetuning
+I'm working on breaking into Data Engineering and GPU Programming with CUDA. 
 
-- **Domain Generalization**: Inductive Biases of Discriminative and Generative Models, OOD Detection, Representation Learning, Unsupervised Domain Adaptation
-
-- **Cultural Biases and Fairness in AI**: Social Biases in LLMs, Safety Alignment, Culturally-Relevant Generative Modeling, Multilingual NLP
-
-- **Interpretability**: Mechanistic Interpretability, Causal Learning, Similarity of Representations, Neural Network Circuits
-
-You can find more details about my projects, relevant experiences (industry, research, and teaching), and activities outside academia in my [Resume](files/Resume.pdf).
+You can find more details in my [Resume](files/Resume.pdf).
 
 # Experience
 
-- Research Collaborator - Stealth (August 2024 -- Present)
-- Research Collaborator - Fatima Fellowship (August 2024 -- Present)
-- Research Assistant - CITY at LUMS (August 2024 -- Present)
-- Research Intern/Assistant - CSaLT at LUMS (Spring 2022 -- Present)
-- Machine Learning Engineer - ISSM.ai (Summer 2023)
-- Deep Learning Intern - CodeSlash (Summer 2022 -- Summer 2023)
+Research Collaborator - Stealth (August 2024 -- Present)
+
+Research Collaborator - Fatima Fellowship (August 2024 -- Present)
+
+Research Associate - CITY at LUMS (August 2024 -- Present)
+
+Research Intern/Associate - CSaLT at LUMS (Spring 2022 -- Present)
+
+Machine Learning Engineer - ISSM.ai (Summer 2023)
+
+Deep Learning Intern - CodeSlash (Summer 2022 -- Summer 2023)
 
 # Teaching
 
-- CS6304 Advanced Topics in Machine Learning (LUMS Fall 2024) - Head TA
-- CS5302 Speech and Language Processing (LUMS Spring 2024) - Head TA
-- CS535 Machine Learning (LUMS Fall 2023) - Head TA
-- CS437 Deep Learning (LUMS Spring 2023) - TA
+CS6304 Advanced Topics in Machine Learning (LUMS Fall 2024) - Head TA
+
+CS5302 Speech and Language Processing (LUMS Spring 2024) - Head TA
+
+CS535 Machine Learning (LUMS Fall 2023) - Head TA
+
+CS437 Deep Learning (LUMS Spring 2023) - TA
 
 # Miscellaneous
 
-- I drink an unhealthy amount of black coffee.
-- My favorite movie is Good Will Hunting.
-- I can do a double backflip but only when no one is looking.
+I drink an unhealthy amount of black coffee.
+
+My favorite movie is Good Will Hunting.
+
+I can do a double backflip but only when no one is looking.
