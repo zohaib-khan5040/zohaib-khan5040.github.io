@@ -1,6 +1,9 @@
 ---
 title: "Zohaib Khan"
 image: files/profile.jpeg
+format: 
+  html:
+    page-layout: full
 about:
   template: trestles
   links:
@@ -10,9 +13,10 @@ about:
     - icon: github
       text: Github
       href: https://github.com/zohaib-khan5040
-    - icon: mortarboard
-      text: Google Scholar
+    - text: "{{< ai google-scholar >}} Google Scholar"
       href: https://scholar.google.com/citations?user=Z-mb0_0AAAAJ&hl=en
+    - text: "{{< fa envelope >}} Email"
+      href: mailto:zohaib.khan3502@gmail.com
     - icon: book
       text: Resume
       href: files/Resume.pdf
