@@ -19,21 +19,19 @@ about:
       href: mailto:zohaib.khan3502@gmail.com
     - icon: book
       text: Resume
-      href: files/Resume.pdf
+      href: https://docs.google.com/document/d/1-qQfehj1ghzi7Ua-brihkZZ_d_dPV8t9KsNUK-a7ASo/edit?usp=sharing
 
 ---
 
 # About Me
 
-I'm currently working as a Research Associate, collaborating on projects at the Lahore University of Management Sciences, under the Fatima Fellowship, and at a stealth startup.
+I'm currently working as a Research Associate, collaborating on projects at the Lahore University of Management Science and under the Fatima Fellowship.
 
-My goal is to democratize Machine Learning systems, making them more efficient, generalizable, and robust to scenarios that they weren't explicitly trained for.
+My goal is to democratize Machine Learning systems, making them more efficient, robust, and safe
 
-Broadly, I'm interested in Efficient Machine Learning (particularly Knowledge Distillation and Parameter-Efficient Finetuning), Safety Alignment, and Domain Generalization. 
+Broadly, I'm interested in Reasoning, Safety Alignment, and Efficient ML Systems.
 
-I'm working on breaking into Data Engineering and GPU Programming with CUDA. 
-
-You can find more details in my [Resume](files/Resume.pdf).
+You can information about my experiences [here](https://docs.google.com/document/d/1-qQfehj1ghzi7Ua-brihkZZ_d_dPV8t9KsNUK-a7ASo/edit?usp=sharing).
 
 # Experience
 
